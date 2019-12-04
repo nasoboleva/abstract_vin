@@ -733,15 +733,15 @@ def _train(net, num_iterations=1, batch_size=128, validation_step=20, lr= 0.001,
 
             # print training statistics to text file
             if print_stat:
-                error_stat = np.array(error_stat)
+                error_stat_ = np.array(error_stat)
                 epoch_list = np.arange(1,len(error_stat)+1)
-                train_data = np.column_stack((epoch_list, error_stat))
+                train_data = np.column_stack((epoch_list, error_stat_))
                 np.savetxt('learning_curves/training_loss_%s.txt' % net.name, train_data, delimiter = " ", fmt=("%d","%f"), header = "Epoch Loss")
 
-                epoch_list = np.arange(validation_step, num_iterations+1, validation_step)
-                evaluation_stat = np.array(evaluation_stat)
-                rollout_stat = np.array(rollout_stat)
-                validation_data = np.column_stack((epoch_list, evaluation_stat, rollout_stat))
+                epoch_list = np.arange(validation_step, epoch+2, validation_step)
+                evaluation_stat_ = np.array(evaluation_stat)
+                rollout_stat_ = np.array(rollout_stat)
+                validation_data = np.column_stack((epoch_list, evaluation_stat_, rollout_stat_))
                 np.savetxt('learning_curves/validation_%s.txt' % net.name, validation_data, delimiter = " ", fmt=("%d","%f","%f"), header = "Epoch Accuracy Success")
             # plot learning curves
             if plot_curves:
