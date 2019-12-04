@@ -17,7 +17,7 @@ class LabeledExample:
         self.map = torch.zeros(size, size)  # obstacle map
         self.number_of_obstacles = 0
         self.goal = ()
-        
+
         # only for 3D motion planning
         self.orientation = 0                # start orientation
         self.goal_orientation = 0
@@ -25,18 +25,18 @@ class LabeledExample:
         self.rotation_step_size = 2*np.pi/self.num_orientations # difference between two adjacent discrete orientations
         self.leg_x = 2                      # distance between robot base and wheel (x-coordinate)
         self.leg_y = 2                      # distance between robot base and wheel (y-coordinate)
-         
-         
+
+
     def add_random_rectangular_obstacles(self, number, max_obs_height, max_obs_width):
         while self.number_of_obstacles < number:
             # sample random position
             x = np.random.randint(0, high=self.size)
             y = np.random.randint(0, high=self.size)
-             
+
             # sample random size
             height = np.random.randint(1, high=max_obs_height)
             width = np.random.randint(1, high=max_obs_width)
-            
+
             # ensure that obstacle lies completly within map
             if x+width >= self.size:
                 width = self.size-x
@@ -46,7 +46,7 @@ class LabeledExample:
             # add obstacle
             self.number_of_obstacles += 1
             self.map[x:x+width, y:y+height] = 1
-                
+
 
 # generates one environment with multiple paths
 # Input:    -idx: index of generated map
@@ -57,20 +57,20 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
     np.random.seed()
     # get global parameters
     size, min_number_of_obstacles, max_number_of_obstacles, max_obs_height, max_obs_width, num_paths_per_grid, for_3d = parameter
-    
+
     failed = True
     while failed:
         failed = False
-        
+
         # create empty map of doubled size (to allow cropping patches of the desired size for each position on the expert paths)
         example = LabeledExample(2*size)
         path_list = []
         action_list = []
-        
+
         # add random obstacles
         number_of_obstacles = np.random.randint(4*min_number_of_obstacles, high=4*max_number_of_obstacles)
-        example.add_random_rectangular_obstacles(number_of_obstacles, max_obs_height, max_obs_width)       
-        
+        example.add_random_rectangular_obstacles(number_of_obstacles, max_obs_height, max_obs_width)
+
         # set start position at the center of the map
         example.start = (size,size)
         # make sure that the start position does not contain any obstacles
@@ -78,7 +78,7 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
             example.map[size-example.leg_x:size+example.leg_x+1,size-example.leg_y:size+example.leg_y+1] = 0
         else:
             example.map[size,size] = 0
-        
+
         num_paths = 0
         counter = 0
         # Use Dijkstra
@@ -98,7 +98,7 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
                 if for_3d:
                     # sample random goal orientation
                     theta = np.random.randint(0,high=example.num_orientations)
-  
+
                     # check if valid path exists:
                     if distances[x,y,theta] != float('Inf'):
                         # get optimal path
@@ -165,23 +165,26 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
                         failed = True
                         break
                     continue
-                
+
                 optimal_path = torch.stack(optimal_path, dim=0)
-                
+
                 if for_3d:
                     action_sequence = path_to_action_vectors(optimal_path, dim=3)
                     action_sequence = torch.stack(action_sequence, dim=0).float()
                 else:
                     action_sequence = path_to_action_vectors(optimal_path, dim=2)
                     action_sequence = torch.stack(action_sequence, dim=0).float()
-                
+
                 path_list.append(optimal_path)
                 action_list.append(action_sequence)
                 num_paths +=1
-    
+
     return example.map, path_list, action_list
 
-def generate_data(number_of_examples, size, min_number_of_obstacles, max_number_of_obstacles, max_obs_height=2, max_obs_width=2, num_path_per_grid=7, for_3d=False, data='training', num_workers=4):
+def generate_data(number_of_examples, size, min_number_of_obstacles,
+                  max_number_of_obstacles, max_obs_height=2, max_obs_width=2,
+                  num_path_per_grid=7, for_3d=False, data='training',
+                  num_workers=4, make_images=True):
     if data=='training':
         print('Generating Training Data')
     elif data=='validation':
@@ -192,40 +195,53 @@ def generate_data(number_of_examples, size, min_number_of_obstacles, max_number_
 
     # make global parameter available for each worker
     global parameter
-    parameter = (size, min_number_of_obstacles, max_number_of_obstacles, max_obs_height, max_obs_width, num_path_per_grid, for_3d)
-    
+    parameter = (size, min_number_of_obstacles, max_number_of_obstacles,
+                 max_obs_height, max_obs_width, num_path_per_grid, for_3d)
+
     inputs = []
     paths = []
     actions = []
-    
-        
+
     pool = Pool(processes=num_workers)
     maps = pool.map(generate_map_with_trajectories, range(number_of_examples))
     pool.close()
-    
-    for map, path_list, action_list in maps:
+
+    if data=='training':
+        if for_3d:
+            file_path = 'data_sets/3D/trainingset_'+str(size)
+        else:
+            file_path = 'data_sets/2D/trainingset_'+str(size)
+    elif data=='validation':
+        if for_3d:
+            file_path = 'data_sets/3D/validationset_'+str(size)
+        else:
+            file_path = 'data_sets/2D/validationset_'+str(size)
+    elif data=='evaluation':
+        if for_3d:
+            file_path = 'data_sets/3D/evaluationset_'+str(size)
+        else:
+            file_path = 'data_sets/2D/evaluationset_'+str(size)
+
+    for i, (map, path_list, action_list) in enumerate(maps):
+        if make_images:
+            map_img = torch.clone(map).numpy()
+            map_img[map_img == 0] = 2
+            for j, path in enumerate(path_list):
+                curr_map_img = map_img.copy()
+                start, goal = path[0].numpy(), path[-1].numpy()
+                curr_map_img[start[0], start[1]] = 0
+                curr_map_img[goal[0], goal[1]] = 0
+
+                imageio.imwrite(file_path + str(i) + '_' + str(j) + '.png', curr_map_img)
+                for path_cell in path_list[1:-1]:
+                    curr_map_img[path_cell[0], path_cell[1]] = 0
+                imageio.imwrite(file_path + str(i) + '_' + str(j) + '_log.png', curr_map_img)
+
         inputs.append(map)
         paths.append(path_list)
         actions.append(action_list)
-    
-    # save to file
-    if data=='training':
-        if for_3d:
-            file_path = 'data_sets/3D/trainingset_'+str(size)+'.pt'
-        else:
-            file_path = 'data_sets/2D/trainingset_'+str(size)+'.pt'
-    elif data=='validation':
-        if for_3d:
-            file_path = 'data_sets/3D/validationset_'+str(size)+'.pt'
-        else:
-            file_path = 'data_sets/2D/validationset_'+str(size)+'.pt'
-    elif data=='evaluation':
-        if for_3d:
-            file_path = 'data_sets/3D/evaluationset_'+str(size)+'.pt'
-        else:
-            file_path = 'data_sets/2D/evaluationset_'+str(size)+'.pt'
-    
-    torch.save({'inputs':inputs, 'paths':paths, 'actions':actions}, file_path)
+
+    torch.save({'inputs':inputs, 'paths':paths, 'actions':actions}, file_path +'.pt')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -270,52 +286,80 @@ if __name__ == '__main__':
         '--num_grids',
         type=int,
         help='Number of different grid worlds to be created. Only if --type is set to all, default values will be used:5000 for training and 715 each for validation and evaluation.')
+    parser.add_argument(
+        '--make_images',
+        type=bool,
+        default=True,
+        help='True, if create images for GAN-finder.')
     param = parser.parse_args()
-    
+
     # set size/dim dependent default values
     if param.max_obs_num is None:
         if param.dim == 2:
             param.max_obs_num = 144
         else:
             param.max_obs_num = 21
-            
+
     if param.min_obs_num is None:
         if param.dim == 2:
             param.min_obs_num = 71
         else:
             param.min_obs_num = 6
-            
+
     if param.max_obs_height is None:
         if param.dim == 2:
             param.max_obs_height = 3*param.size//32
         else:
             param.max_obs_height = 5*param.size//32
-            
+
     if param.max_obs_width is None:
         param.max_obs_width = param.max_obs_height
-        
+
     if param.num_grids is None:
         if param.type == 'training':
             param.num_grids = 5000
         else:
             param.num_grids = 715
-    
+
+    if param.make_images is None:
+        param.make_images = True
+
     if param.dim==3:
         for_3d = True
     else:
         for_3d = False
-        
+
     # generate data
     if param.type == 'training':
-        generate_data(param.num_grids, param.size, param.min_obs_num, param.max_obs_num, param.max_obs_height, param.max_obs_width, param.paths_per_grid, for_3d=for_3d, data='training', num_workers=param.num_workers)
+        generate_data(param.num_grids, param.size, param.min_obs_num,
+                      param.max_obs_num, param.max_obs_height,
+                      param.max_obs_width, param.paths_per_grid,
+                      for_3d=for_3d, data='training',
+                      num_workers=param.num_workers, make_images=param.make_images)
     elif param.type == 'validation':
-        generate_data(param.num_grids, param.size, param.min_obs_num, param.max_obs_num, param.max_obs_height, param.max_obs_width, param.paths_per_grid, for_3d=for_3d, data='validation', num_workers=param.num_workers)
+        generate_data(param.num_grids, param.size, param.min_obs_num,
+                      param.max_obs_num, param.max_obs_height,
+                      param.max_obs_width, param.paths_per_grid,
+                      for_3d=for_3d, data='validation',
+                      num_workers=param.num_workers, make_images=param.make_images)
     elif param.type == 'evaluation':
-        generate_data(param.num_grids, param.size, param.min_obs_num, param.max_obs_num, param.max_obs_height, param.max_obs_width, param.paths_per_grid, for_3d=for_3d, data='evaluation', num_workers=param.num_workers)
+        generate_data(param.num_grids, param.size, param.min_obs_num,
+                      param.max_obs_num, param.max_obs_height,
+                      param.max_obs_width, param.paths_per_grid,
+                      for_3d=for_3d, data='evaluation',
+                      num_workers=param.num_workers, make_images=param.make_images)
     elif param.type == 'all':
-        generate_data(5000, param.size, param.min_obs_num, param.max_obs_num, param.max_obs_height, param.max_obs_width, param.paths_per_grid, for_3d=for_3d, data='training', num_workers=param.num_workers)
-        generate_data(715, param.size, param.min_obs_num, param.max_obs_num, param.max_obs_height, param.max_obs_width, param.paths_per_grid, for_3d=for_3d, data='validation', num_workers=param.num_workers)
-        generate_data(715, param.size, param.min_obs_num, param.max_obs_num, param.max_obs_height, param.max_obs_width, param.paths_per_grid, for_3d=for_3d, data='evaluation', num_workers=param.num_workers)
+        generate_data(5000, param.size, param.min_obs_num, param.max_obs_num,
+                      param.max_obs_height, param.max_obs_width,
+                      param.paths_per_grid, for_3d=for_3d, data='training',
+                      num_workers=param.num_workers, make_images=param.make_images)
+        generate_data(715, param.size, param.min_obs_num, param.max_obs_num,
+                      param.max_obs_height, param.max_obs_width,
+                      param.paths_per_grid, for_3d=for_3d, data='validation',
+                      num_workers=param.num_workers, make_images=param.make_images)
+        generate_data(715, param.size, param.min_obs_num, param.max_obs_num,
+                      param.max_obs_height, param.max_obs_width,
+                      param.paths_per_grid, for_3d=for_3d, data='evaluation',
+                      num_workers=param.num_workers, make_images=param.make_images)
     else:
         print('Invalid dataset type.')
-        
