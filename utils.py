@@ -20,10 +20,10 @@ def extract_path(start, goal, predecessor, dim=3):
 
     if dim == 2:
         while (current[0] != start[0] or current[1] != start[1]):
-            path.append(torch.tensor([current[0],current[1]]))
+            path.append(torch.tensor([current[0].astype(np.int64),current[1].astype(np.int64)]))
             current = (predecessor[0,current[0],current[1]],predecessor[1,current[0],current[1]])
 
-        path.append(torch.tensor([start[0],start[1]]))
+        path.append(torch.tensor([start[0].astype(np.int64),start[1].astype(np.int64)]))
     elif dim == 3:
         while (current[0] != start[0] or current[1] != start[1] or current[2] != start[2]):
             path.append(torch.tensor([current[0],current[1],current[2]]))
