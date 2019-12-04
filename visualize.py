@@ -14,11 +14,11 @@ from utils import visualize_2d, visualize_3d, get_path_length
 def plot_2d(size, map_indices, path_indices, vin=True, hvin=True, abstraction_vin=True):
     # load evaluation set
     dataset = GridDataset_2d(size, data_type='evaluation', full_paths=True)
-    
+
     # load networks
     if vin:
         vin = VIN(size)
-        
+
         # load network state
         if os.path.isfile('network/%s.pt' % vin.name):
             vin.load_state_dict(torch.load('network/%s.pt' % vin.name))
@@ -26,10 +26,10 @@ def plot_2d(size, map_indices, path_indices, vin=True, hvin=True, abstraction_vi
         else:
             print("VIN was not trained.")
             vin = False
-            
+
     if hvin:
         hvin = HVIN(size)
-        
+
         # load network state
         if os.path.isfile('network/%s.pt' % hvin.name):
             hvin.load_state_dict(torch.load('network/%s.pt' % hvin.name))
@@ -37,10 +37,10 @@ def plot_2d(size, map_indices, path_indices, vin=True, hvin=True, abstraction_vi
         else:
             print("HVIN was not trained.")
             hvin = False
-    
+
     if abstraction_vin:
         abstraction_vin = Abstraction_VIN_2D(size)
-        
+
         # load network state
         if os.path.isfile('network/%s.pt' % abstraction_vin.name):
             abstraction_vin.load_state_dict(torch.load('network/%s.pt' % abstraction_vin.name))
@@ -48,7 +48,7 @@ def plot_2d(size, map_indices, path_indices, vin=True, hvin=True, abstraction_vi
         else:
             print("Abstraction_VIN was not trained.")
             abstraction_vin = False
-    
+
     for map_index, path_index in zip(map_indices, path_indices):
         map = dataset.grids[map_index]      # environment map
         optimal_path = dataset.expert_paths[map_index][path_index]
@@ -58,7 +58,7 @@ def plot_2d(size, map_indices, path_indices, vin=True, hvin=True, abstraction_vi
         print('Path index: %d' % path_index)
         print('Optimal path length:  %f' % get_path_length(optimal_path))
         net_paths = []
-        
+
         # predict paths
         if abstraction_vin:
             abstraction_vin_path, abstraction_vin_success = _get_path_2d(abstraction_vin, dataset, map, map_index, start, goal, 2*len(optimal_path))
@@ -70,8 +70,8 @@ def plot_2d(size, map_indices, path_indices, vin=True, hvin=True, abstraction_vi
             net_paths.append(abstraction_vin_path)
         else:
             net_paths.append(None)
-        
-        if vin:           
+
+        if vin:
             vin_path, vin_success = _get_path_2d(vin, dataset, map, map_index, start, goal, 2*len(optimal_path))
             vin_path = torch.stack(vin_path, dim=0)
             if vin_success:
@@ -81,7 +81,7 @@ def plot_2d(size, map_indices, path_indices, vin=True, hvin=True, abstraction_vi
             net_paths.append(vin_path)
         else:
             net_paths.append(None)
-                
+
         if hvin:
             hvin_path, hvin_success = _get_path_2d(hvin, dataset, map, map_index, start, goal, 2*len(optimal_path))
             hvin_path = torch.stack(hvin_path, dim=0)
@@ -94,13 +94,13 @@ def plot_2d(size, map_indices, path_indices, vin=True, hvin=True, abstraction_vi
             net_paths.append(None)
 
         # plot paths
-        visualize_2d(map, goal, optimal_path, net_paths, ['Abstraction_VIN','VIN','HVIN'])
+        visualize_2d(map, goal, optimal_path, net_paths, ['Abstraction_VIN','VIN','HVIN'], map_index)
 
 # plot paths for 3D task
-def plot_3d(size, map_indices, path_indices):  
+def plot_3d(size, map_indices, path_indices):
     # load network
     abstraction_vin = Abstraction_VIN_3D(size)
-    
+
     # load network state
     if os.path.isfile('network/%s.pt' % abstraction_vin.name):
         abstraction_vin.load_state_dict(torch.load('network/%s.pt' % abstraction_vin.name))
@@ -108,7 +108,7 @@ def plot_3d(size, map_indices, path_indices):
     else:
         print("Abstraction_VIN was not trained.")
         return
-    
+
     for map_index, path_index in zip(map_indices, path_indices):
         map = dataset.grids[map_index]      # environment map
         optimal_path = dataset.expert_paths[map_index][path_index]
@@ -117,7 +117,7 @@ def plot_3d(size, map_indices, path_indices):
         print('Map index: %d' % map_index)
         print('Path index: %d' % path_index)
         print('Optimal path length:  %f' % get_path_length(optimal_path, dim=3))
-        
+
         # predict path
         abstraction_vin_path, abstraction_vin_success = _get_path_3d(abstraction_vin, dataset, map, map_index, start, goal, 2*len(optimal_path))
         abstraction_vin_path = torch.stack(abstraction_vin_path, dim=0)
@@ -127,7 +127,7 @@ def plot_3d(size, map_indices, path_indices):
             print('Abstraction_VIN: No path found.')
 
         # plot paths
-        visualize_3d(map, goal, optimal_path, abstraction_vin_path)    
+        visualize_3d(map, goal, optimal_path, abstraction_vin_path)
 
 
 if __name__ == '__main__':
@@ -154,7 +154,7 @@ if __name__ == '__main__':
         default=None,
         help='Index of the path that shall be plotted. If none is given, it will be chosen randomly.')
     param = parser.parse_args()
-    
+
     if param.dim == 2:
         # load evaluation set
         dataset = GridDataset_2d(param.size, data_type='evaluation', full_paths=True)
@@ -164,19 +164,18 @@ if __name__ == '__main__':
 
     if param.map_id is not None or param.path_id is not None:
         param.num = 1
-    
+
     if param.map_id is None:
         map_indices = np.random.randint(dataset.num_examples, size=param.num)
     else:
         map_indices = [param.map_id]
-    
+
     if param.path_id is None:
         path_indices = np.random.randint(dataset.num_paths_per_map, size=param.num)
     else:
         path_indices = [param.path_id]
-    
+
     if param.dim == 2:
         plot_2d(param.size, map_indices, path_indices)
     elif param.dim == 3:
         plot_3d(param.size, map_indices, path_indices)
-    
