@@ -203,9 +203,13 @@ def generate_data(number_of_examples, size, min_number_of_obstacles,
     paths = []
     actions = []
 
-    pool = Pool(processes=num_workers)
-    maps = pool.map(generate_map_with_trajectories, range(number_of_examples))
-    pool.close()
+    maps = []
+
+    for ex in number_of_examples:
+        maps += [generate_map_with_trajectories]
+    #pool = Pool(processes=num_workers)
+    #maps = pool.map(generate_map_with_trajectories, range(number_of_examples))
+    #pool.close()
 
     if data=='training':
         if for_3d:
