@@ -205,8 +205,8 @@ def generate_data(number_of_examples, size, min_number_of_obstacles,
 
     maps = []
 
-    for ex in number_of_examples:
-        maps += [generate_map_with_trajectories]
+    for ex in range(number_of_examples):
+        maps += [generate_map_with_trajectories(ex)]
     #pool = Pool(processes=num_workers)
     #maps = pool.map(generate_map_with_trajectories, range(number_of_examples))
     #pool.close()
@@ -229,7 +229,7 @@ def generate_data(number_of_examples, size, min_number_of_obstacles,
 
     for i, (map, path_list, action_list) in enumerate(maps):
         if make_images:
-            map_img = torch.clone(map).numpy()
+            map_img = map.numpy().copy()
             map_img[map_img == 0] = 2
             for j, path in enumerate(path_list):
                 curr_map_img = map_img.copy()

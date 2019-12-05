@@ -539,10 +539,10 @@ class Abstraction_VIN_2D(nn.Module):
 
         # transitions from high to low abstraction levels:
             # from Level-2 to Level-1
-        r_pad[:,0,1:-1,0] = F.interpolate(r[:,1:self.level_2_features+1,self.size_eff//4:-self.size_eff//4,self.size_eff//4-1].mean(1,keepdim=True), scale_factor = 2).squeeze(1)
-        r_pad[:,0,1:-1,-1] = F.interpolate(r[:,1:self.level_2_features+1,self.size_eff//4:-self.size_eff//4,-self.size_eff//4].mean(1,keepdim=True), scale_factor = 2).squeeze(1)
-        r_pad[:,0,0,1:-1] = F.interpolate(r[:,1:self.level_2_features+1,self.size_eff//4-1,self.size_eff//4:-self.size_eff//4].mean(1,keepdim=True), scale_factor = 2).squeeze(1)
-        r_pad[:,0,-1,1:-1] = F.interpolate(r[:,1:self.level_2_features+1,-self.size_eff//4,self.size_eff//4:-self.size_eff//4].mean(1,keepdim=True), scale_factor = 2).squeeze(1)
+        r_pad[:,0,1:-1,0] = F.upsample_nearest(r[:,1:self.level_2_features+1,self.size_eff//4:-self.size_eff//4,self.size_eff//4-1].mean(1,keepdim=True), scale_factor = 2).squeeze(1)
+        r_pad[:,0,1:-1,-1] = F.upsample_nearest(r[:,1:self.level_2_features+1,self.size_eff//4:-self.size_eff//4,-self.size_eff//4].mean(1,keepdim=True), scale_factor = 2).squeeze(1)
+        r_pad[:,0,0,1:-1] = F.upsample_nearest(r[:,1:self.level_2_features+1,self.size_eff//4-1,self.size_eff//4:-self.size_eff//4].mean(1,keepdim=True), scale_factor = 2).squeeze(1)
+        r_pad[:,0,-1,1:-1] = F.upsample_nearest(r[:,1:self.level_2_features+1,-self.size_eff//4,self.size_eff//4:-self.size_eff//4].mean(1,keepdim=True), scale_factor = 2).squeeze(1)
 
         r_pad[:,0,0,0] = r[:,1:3,self.size_eff//4-1,self.size_eff//4-1].mean(1,keepdim=True).squeeze(1)
         r_pad[:,0,0,-1] = r[:,1:3,self.size_eff//4-1,-self.size_eff//4].mean(1,keepdim=True).squeeze(1)
@@ -550,10 +550,10 @@ class Abstraction_VIN_2D(nn.Module):
         r_pad[:,0,-1,-1] = r[:,1:3,-self.size_eff//4,-self.size_eff//4].mean(1,keepdim=True).squeeze(1)
 
             # from Level-3 to Level-2
-        r_pad[:,1,1:-1,0] = F.interpolate(r[:,self.level_2_features+1:,self.size_eff//4:-self.size_eff//4,self.size_eff//4-1].mean(1,keepdim=True), scale_factor = 2).squeeze(1)
-        r_pad[:,1,1:-1,-1] = F.interpolate(r[:,self.level_2_features+1:,self.size_eff//4:-self.size_eff//4,-self.size_eff//4].mean(1,keepdim=True), scale_factor = 2).squeeze(1)
-        r_pad[:,1,0,1:-1] = F.interpolate(r[:,self.level_2_features+1:,self.size_eff//4-1,self.size_eff//4:-self.size_eff//4].mean(1,keepdim=True), scale_factor = 2).squeeze(1)
-        r_pad[:,1,-1,1:-1] = F.interpolate(r[:,self.level_2_features+1:,-self.size_eff//4,self.size_eff//4:-self.size_eff//4].mean(1,keepdim=True), scale_factor = 2).squeeze(1)
+        r_pad[:,1,1:-1,0] = F.upsample_nearest(r[:,self.level_2_features+1:,self.size_eff//4:-self.size_eff//4,self.size_eff//4-1].mean(1,keepdim=True), scale_factor = 2).squeeze(1)
+        r_pad[:,1,1:-1,-1] = F.upsample_nearest(r[:,self.level_2_features+1:,self.size_eff//4:-self.size_eff//4,-self.size_eff//4].mean(1,keepdim=True), scale_factor = 2).squeeze(1)
+        r_pad[:,1,0,1:-1] = F.upsample_nearest(r[:,self.level_2_features+1:,self.size_eff//4-1,self.size_eff//4:-self.size_eff//4].mean(1,keepdim=True), scale_factor = 2).squeeze(1)
+        r_pad[:,1,-1,1:-1] = F.upsample_nearest(r[:,self.level_2_features+1:,-self.size_eff//4,self.size_eff//4:-self.size_eff//4].mean(1,keepdim=True), scale_factor = 2).squeeze(1)
 
         r_pad[:,1,0,0] = r[:,3:,self.size_eff//4-1,self.size_eff//4-1].mean(1,keepdim=True).squeeze(1)
         r_pad[:,1,0,-1] = r[:,3:,self.size_eff//4-1,-self.size_eff//4].mean(1,keepdim=True).squeeze(1)
@@ -594,10 +594,10 @@ class Abstraction_VIN_2D(nn.Module):
                 # information flow from high to low abstraction level
                 # (pad lower-level with values from neighboring higher-level cells)
             v_pad = F.pad(v,(1,1,1,1), 'constant', 0)
-            v_pad[:,0:2,1:-1,0] = F.interpolate(v[:,1:3,self.size_eff//4:-self.size_eff//4,self.size_eff//4-1], scale_factor = 2)
-            v_pad[:,0:2,1:-1,-1] = F.interpolate(v[:,1:3,self.size_eff//4:-self.size_eff//4,-self.size_eff//4], scale_factor = 2)
-            v_pad[:,0:2,0,1:-1] = F.interpolate(v[:,1:3,self.size_eff//4-1,self.size_eff//4:-self.size_eff//4], scale_factor = 2)
-            v_pad[:,0:2,-1,1:-1] = F.interpolate(v[:,1:3,-self.size_eff//4,self.size_eff//4:-self.size_eff//4], scale_factor = 2)
+            v_pad[:,0:2,1:-1,0] = F.upsample_nearest(v[:,1:3,self.size_eff//4:-self.size_eff//4,self.size_eff//4-1], scale_factor = 2)
+            v_pad[:,0:2,1:-1,-1] = F.upsample_nearest(v[:,1:3,self.size_eff//4:-self.size_eff//4,-self.size_eff//4], scale_factor = 2)
+            v_pad[:,0:2,0,1:-1] = F.upsample_nearest(v[:,1:3,self.size_eff//4-1,self.size_eff//4:-self.size_eff//4], scale_factor = 2)
+            v_pad[:,0:2,-1,1:-1] = F.upsample_nearest(v[:,1:3,-self.size_eff//4,self.size_eff//4:-self.size_eff//4], scale_factor = 2)
 
             v_pad[:,0:2,0,0] = v[:,1:3,self.size_eff//4-1,self.size_eff//4-1]
             v_pad[:,0:2,0,-1] = v[:,1:3,self.size_eff//4-1,-self.size_eff//4]
@@ -632,10 +632,10 @@ class Abstraction_VIN_2D(nn.Module):
 
         # information flow from high to low abstraction level
         v_pad = F.pad(v,(1,1,1,1), 'constant', 0)
-        v_pad[:,0:2,1:-1,0] = F.interpolate(v[:,1:3,self.size_eff//4:-self.size_eff//4,self.size_eff//4-1], scale_factor = 2)
-        v_pad[:,0:2,1:-1,-1] = F.interpolate(v[:,1:3,self.size_eff//4:-self.size_eff//4,-self.size_eff//4], scale_factor = 2)
-        v_pad[:,0:2,0,1:-1] = F.interpolate(v[:,1:3,self.size_eff//4-1,self.size_eff//4:-self.size_eff//4], scale_factor = 2)
-        v_pad[:,0:2,-1,1:-1] = F.interpolate(v[:,1:3,-self.size_eff//4,self.size_eff//4:-self.size_eff//4], scale_factor = 2)
+        v_pad[:,0:2,1:-1,0] = F.upsample_nearest(v[:,1:3,self.size_eff//4:-self.size_eff//4,self.size_eff//4-1], scale_factor = 2)
+        v_pad[:,0:2,1:-1,-1] = F.upsample_nearest(v[:,1:3,self.size_eff//4:-self.size_eff//4,-self.size_eff//4], scale_factor = 2)
+        v_pad[:,0:2,0,1:-1] = F.upsample_nearest(v[:,1:3,self.size_eff//4-1,self.size_eff//4:-self.size_eff//4], scale_factor = 2)
+        v_pad[:,0:2,-1,1:-1] = F.upsample_nearest(v[:,1:3,-self.size_eff//4,self.size_eff//4:-self.size_eff//4], scale_factor = 2)
 
         v_pad[:,0:2,0,0] = v[:,1:3,self.size_eff//4-1,self.size_eff//4-1]
         v_pad[:,0:2,0,-1] = v[:,1:3,self.size_eff//4-1,-self.size_eff//4]
