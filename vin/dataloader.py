@@ -14,7 +14,7 @@ class GridDataset_2d(Dataset):
         elif data_type=='evaluation':
             file_path = 'data_sets/2D/' + exp_name + '/evaluationset_' + str(size)+'.pt'
         elif data_type=='validation':
-            file_path = 'data_sets/2D/' + exp_name + 'validationset_' + str(size)+'.pt'
+            file_path = 'data_sets/2D/' + exp_name + '/validationset_' + str(size)+'.pt'
         else:
             print('Unknown dataset type.')
 
