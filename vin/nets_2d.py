@@ -13,6 +13,7 @@ from torch.autograd import Variable
 from torch.nn.parameter import Parameter
 from torch.utils.data import Dataset, DataLoader
 from multiprocessing import Pool
+import os
 
 from vin.dataloader import GridDataset_2d
 from utils import get_action, get_path_length
