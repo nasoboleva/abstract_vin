@@ -161,10 +161,10 @@ if __name__ == '__main__':
 
     if param.dim == 2:
         # load evaluation set
-        dataset = GridDataset_2d(param.size, data_type='evaluation', full_paths=True, param.exp_name)
+        dataset = GridDataset_2d(param.size, data_type='evaluation', full_paths=True, exp_name=param.exp_name)
     elif param.dim == 3:
         # load evaluation set
-        dataset = GridDataset_3d(param.size, data_type='evaluation', full_paths=True, param.exp_name)
+        dataset = GridDataset_3d(param.size, data_type='evaluation', full_paths=True, exp_name=param.exp_name)
 
     if param.map_id is not None or param.path_id is not None:
         param.num = 1

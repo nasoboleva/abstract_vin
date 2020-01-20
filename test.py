@@ -58,7 +58,7 @@ if __name__ == '__main__':
             print("New network initialized.")
 
         net.to(device)
-        net.test(batch_size=param.batch, validation=False, param.exp_name)
+        net.test(batch_size=param.batch, validation=False, exp_name=param.exp_name)
         net.rollout(batch_size = param.batch, validation=False, num_workers=param.workers, exp_name=param.exp_name)
     else:
         net = Abstraction_VIN_3D(param.size, k = param.k)

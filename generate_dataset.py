@@ -7,6 +7,7 @@ from multiprocessing import Pool
 import argparse
 import imageio
 import os
+import math
 
 from astar import astar_planner_2d, astar_planner_3d, dijkstra_planner_2d, dijkstra_planner_3d
 from utils import path_to_action_vectors, extract_path
@@ -33,13 +34,13 @@ class LabeledExample:
         if if_ours:
             while self.number_of_obstacles < number:
                 dencity = 0.2
-                max_proportion = math.floor(math.sqrt(self.size ** 2 * dencity // 6))
+                max_proportion = math.floor(math.sqrt(self.size * 4 ** 2 * dencity // 6))
                 proportion = np.random.choice(np.arange(1, max_proportion + 1))
                 obst_width = 2 * proportion
                 obst_height = 3 * proportion
                 x = np.random.choice(np.arange(3, self.size  - 1 - 3 - obst_height))
-                y = np.random.choice(np.arange(self.size  - 1 - self.size ))
-                if current_number % 2 == 0:
+                y = np.random.choice(np.arange(self.size  - 1 - obst_height ))
+                if self.number_of_obstacles % 2 == 0:
                     for dx in range(obst_width):
                         for dy in range(obst_height):
                             self.map[y + dy][x + dx] = 1
