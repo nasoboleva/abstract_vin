@@ -10,11 +10,11 @@ from torch.utils.data import Dataset, DataLoader
 class GridDataset_2d(Dataset):
     def __init__(self, size, data_type='training', full_paths=False, exp_name='1'):
         if data_type=='training':
-            file_path = 'data_sets/2D' + exp_name + '/trainingset_' + str(size)+'.pt'
+            file_path = 'data_sets/2D/' + exp_name + '/trainingset_' + str(size)+'.pt'
         elif data_type=='evaluation':
-            file_path = 'data_sets/2D' + exp_name + '/evaluationset_' + str(size)+'.pt'
+            file_path = 'data_sets/2D/' + exp_name + '/evaluationset_' + str(size)+'.pt'
         elif data_type=='validation':
-            file_path = 'data_sets/2D' + exp_name + 'validationset_' + str(size)+'.pt'
+            file_path = 'data_sets/2D/' + exp_name + 'validationset_' + str(size)+'.pt'
         else:
             print('Unknown dataset type.')
 
