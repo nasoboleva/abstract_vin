@@ -3,6 +3,7 @@ import torch
 import matplotlib.pyplot as plt
 from math import sqrt, cos, sin
 import numpy as np
+import os
 
 actions = {(0,0):0, (-1,-1):1,(-1,0):2,(-1,1):3,(0,-1):4,(0,1):5,(1,-1):6,(1,0):7,(1,1):8}
 actions_3d = {(0,0,0):0, (-1,-1,0):1,(-1,0,0):2,(-1,1,0):3,(0,-1,0):4,(0,1,0):5,(1,-1,0):6,(1,0,0):7,(1,1,0):8, (0,0,-1):9, (0,0,1):10}

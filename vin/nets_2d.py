@@ -739,26 +739,26 @@ def _train(net, num_iterations=1, batch_size=128, validation_step=20, lr= 0.001,
                 error_stat_ = np.array(error_stat)
                 epoch_list = np.arange(1,len(error_stat)+1)
                 train_data = np.column_stack((epoch_list, error_stat_))
-                np.savetxt('network/' + exp_name + '/training_loss_%s.txt' % net.name, train_data, delimiter = " ", fmt=("%d","%f"), header = "Epoch Loss")
+                np.savetxt('learning_curves/' + exp_name + '/training_loss_%s.txt' % net.name, train_data, delimiter = " ", fmt=("%d","%f"), header = "Epoch Loss")
 
                 epoch_list = np.arange(validation_step, epoch+2, validation_step)
                 evaluation_stat_ = np.array(evaluation_stat)
                 rollout_stat_ = np.array(rollout_stat)
                 validation_data = np.column_stack((epoch_list, evaluation_stat_, rollout_stat_))
-                np.savetxt('network/' + exp_name + '/validation_%s.txt' % net.name, validation_data, delimiter = " ", fmt=("%d","%f","%f"), header = "Epoch Accuracy Success")
+                np.savetxt('learning_curves/' + exp_name + '/validation_%s.txt' % net.name, validation_data, delimiter = " ", fmt=("%d","%f","%f"), header = "Epoch Accuracy Success")
             # plot learning curves
             if plot_curves:
                 plt.figure(0)
                 plt.plot(range(len(error_stat)), error_stat)
-                plt.savefig('network/' + exp_name + '/training_loss_%s.png' % net.name)
+                plt.savefig('learning_curves/' + exp_name + '/training_loss_%s.png' % net.name)
 
                 plt.figure(1)
                 plt.plot(range(len(evaluation_stat)), evaluation_stat)
-                plt.savefig('network/' + exp_name + '/accuracy_%s.png' % net.name)
+                plt.savefig('learning_curves/' + exp_name + '/accuracy_%s.png' % net.name)
 
                 plt.figure(2)
                 plt.plot(range(len(rollout_stat)), rollout_stat)
-                plt.savefig('network/' + exp_name + '/success_%s.png' % net.name)
+                plt.savefig('learning_curves/' + exp_name + '/success_%s.png' % net.name)
 
         else:
             print('[epoch %d] loss per batch: %.10f, time: %f' % (epoch + 1, running_loss / num_batches, duration_epoch))
