@@ -6,6 +6,7 @@ import time
 from multiprocessing import Pool
 import argparse
 import imageio
+import os
 
 from astar import astar_planner_2d, astar_planner_3d, dijkstra_planner_2d, dijkstra_planner_3d
 from utils import path_to_action_vectors, extract_path
@@ -28,25 +29,44 @@ class LabeledExample:
         self.leg_y = 2                      # distance between robot base and wheel (y-coordinate)
 
 
-    def add_random_rectangular_obstacles(self, number, max_obs_height, max_obs_width):
-        while self.number_of_obstacles < number:
-            # sample random position
-            x = np.random.randint(0, high=self.size)
-            y = np.random.randint(0, high=self.size)
+    def add_random_rectangular_obstacles(self, number, max_obs_height, max_obs_width, if_ours=False):
+        if if_ours:
+            while self.number_of_obstacles < number:
+                dencity = 0.2
+                max_proportion = math.floor(math.sqrt(self.size ** 2 * dencity // 6))
+                proportion = np.random.choice(np.arange(1, max_proportion + 1))
+                obst_width = 2 * proportion
+                obst_height = 3 * proportion
+                x = np.random.choice(np.arange(3, self.size  - 1 - 3 - obst_height))
+                y = np.random.choice(np.arange(self.size  - 1 - self.size ))
+                if current_number % 2 == 0:
+                    for dx in range(obst_width):
+                        for dy in range(obst_height):
+                            self.map[y + dy][x + dx] = 1
+                else:
+                    for dx in range(obst_height):
+                        for dy in range(obst_width):
+                            self.map[y + dy][x + dx] = 1
+                self.number_of_obstacles += 1
+        else:
+            while self.number_of_obstacles < number:
+                # sample random position
+                x = np.random.randint(0, high=self.size)
+                y = np.random.randint(0, high=self.size)
 
-            # sample random size
-            height = np.random.randint(1, high=max_obs_height)
-            width = np.random.randint(1, high=max_obs_width)
+                # sample random size
+                height = np.random.randint(1, high=max_obs_height)
+                width = np.random.randint(1, high=max_obs_width)
 
-            # ensure that obstacle lies completly within map
-            if x+width >= self.size:
-                width = self.size-x
-            if y+height >= self.size:
-                height = self.size-y
+                # ensure that obstacle lies completly within map
+                if x+width >= self.size:
+                    width = self.size-x
+                if y+height >= self.size:
+                    height = self.size-y
 
-            # add obstacle
-            self.number_of_obstacles += 1
-            self.map[x:x+width, y:y+height] = 1
+                # add obstacle
+                self.number_of_obstacles += 1
+                self.map[x:x+width, y:y+height] = 1
 
 
 # generates one environment with multiple paths
@@ -57,7 +77,7 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
     # reset random seed
     np.random.seed()
     # get global parameters
-    size, min_number_of_obstacles, max_number_of_obstacles, max_obs_height, max_obs_width, num_paths_per_grid, for_3d = parameter
+    size, min_number_of_obstacles, max_number_of_obstacles, max_obs_height, max_obs_width, num_paths_per_grid, for_3d, if_ours = parameter
 
     failed = True
     while failed:
@@ -70,7 +90,7 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
 
         # add random obstacles
         number_of_obstacles = np.random.randint(4*min_number_of_obstacles, high=4*max_number_of_obstacles)
-        example.add_random_rectangular_obstacles(number_of_obstacles, max_obs_height, max_obs_width)
+        example.add_random_rectangular_obstacles(number_of_obstacles, max_obs_height, max_obs_width, if_ours)
 
         # set start position at the center of the map
         example.start = (size,size)
@@ -185,7 +205,7 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
 def generate_data(number_of_examples, size, min_number_of_obstacles,
                   max_number_of_obstacles, max_obs_height=2, max_obs_width=2,
                   num_path_per_grid=7, for_3d=False, data='training',
-                  num_workers=4, make_images=True):
+                  num_workers=4, make_images=True, exp_name='1', if_ours=False):
     if data=='training':
         print('Generating Training Data')
     elif data=='validation':
@@ -197,7 +217,8 @@ def generate_data(number_of_examples, size, min_number_of_obstacles,
     # make global parameter available for each worker
     global parameter
     parameter = (size, min_number_of_obstacles, max_number_of_obstacles,
-                 max_obs_height, max_obs_width, num_path_per_grid, for_3d)
+                 max_obs_height, max_obs_width, num_path_per_grid, for_3d,
+                 if_ours)
 
     inputs = []
     paths = []
@@ -213,19 +234,25 @@ def generate_data(number_of_examples, size, min_number_of_obstacles,
 
     if data=='training':
         if for_3d:
-            file_path = 'data_sets/3D/trainingset_'+str(size)
+            os.makedirs('data_sets/3D/' + str(exp_name), exist_ok=True)
+            file_path = 'data_sets/3D/' + str(exp_name) + '/trainingset_'+str(size)
         else:
-            file_path = 'data_sets/2D/trainingset_'+str(size)
+            os.makedirs('data_sets/2D/' + str(exp_name), exist_ok=True)
+            file_path = 'data_sets/2D/' + str(exp_name) + '/trainingset_'+str(size)
     elif data=='validation':
         if for_3d:
-            file_path = 'data_sets/3D/validationset_'+str(size)
+            os.makedirs('data_sets/3D/' + str(exp_name), exist_ok=True)
+            file_path = 'data_sets/3D/' + str(exp_name) + '/validationset_'+str(size)
         else:
-            file_path = 'data_sets/2D/validationset_'+str(size)
+            os.makedirs('data_sets/2D/' + str(exp_name), exist_ok=True)
+            file_path = 'data_sets/2D/' + str(exp_name) + '/validationset_'+str(size)
     elif data=='evaluation':
         if for_3d:
-            file_path = 'data_sets/3D/evaluationset_'+str(size)
+            os.makedirs('data_sets/3D/' + str(exp_name), exist_ok=True)
+            file_path = 'data_sets/3D/' + str(exp_name) + '/evaluationset_'+str(size)
         else:
-            file_path = 'data_sets/2D/evaluationset_'+str(size)
+            os.makedirs('data_sets/2D/' + str(exp_name), exist_ok=True)
+            file_path = 'data_sets/2D/' + str(exp_name) + '/evaluationset_'+str(size)
 
     for i, (map, path_list, action_list) in enumerate(maps):
         if make_images:
@@ -298,6 +325,14 @@ if __name__ == '__main__':
         type=bool,
         default=True,
         help='True, if create images for GAN-finder.')
+    parser.add_argument(
+        '--exp_name',
+        type=str,
+        help='Name of the data and results folder.')
+    parser.add_argument(
+        '--if_ours',
+        type=bool,
+        help='Name of the data and results folder.')
     param = parser.parse_args()
 
     # set size/dim dependent default values
@@ -342,31 +377,37 @@ if __name__ == '__main__':
                       param.max_obs_num, param.max_obs_height,
                       param.max_obs_width, param.paths_per_grid,
                       for_3d=for_3d, data='training',
-                      num_workers=param.num_workers, make_images=param.make_images)
+                      num_workers=param.num_workers, make_images=param.make_images,
+                      exp_name=param.exp_name, if_ours=param.if_ours)
     elif param.type == 'validation':
         generate_data(param.num_grids, param.size, param.min_obs_num,
                       param.max_obs_num, param.max_obs_height,
                       param.max_obs_width, param.paths_per_grid,
                       for_3d=for_3d, data='validation',
-                      num_workers=param.num_workers, make_images=param.make_images)
+                      num_workers=param.num_workers, make_images=param.make_images,
+                      exp_name=param.exp_name, if_ours=param.if_ours)
     elif param.type == 'evaluation':
         generate_data(param.num_grids, param.size, param.min_obs_num,
                       param.max_obs_num, param.max_obs_height,
                       param.max_obs_width, param.paths_per_grid,
                       for_3d=for_3d, data='evaluation',
-                      num_workers=param.num_workers, make_images=param.make_images)
+                      num_workers=param.num_workers, make_images=param.make_images,
+                      exp_name=param.exp_name, if_ours=param.if_ours)
     elif param.type == 'all':
         generate_data(5000, param.size, param.min_obs_num, param.max_obs_num,
                       param.max_obs_height, param.max_obs_width,
                       param.paths_per_grid, for_3d=for_3d, data='training',
-                      num_workers=param.num_workers, make_images=param.make_images)
+                      num_workers=param.num_workers, make_images=param.make_images,
+                      exp_name=param.exp_name, if_ours=param.if_ours)
         generate_data(715, param.size, param.min_obs_num, param.max_obs_num,
                       param.max_obs_height, param.max_obs_width,
                       param.paths_per_grid, for_3d=for_3d, data='validation',
-                      num_workers=param.num_workers, make_images=param.make_images)
+                      num_workers=param.num_workers, make_images=param.make_images,
+                      exp_name=param.exp_name, if_ours=param.if_ours)
         generate_data(715, param.size, param.min_obs_num, param.max_obs_num,
                       param.max_obs_height, param.max_obs_width,
                       param.paths_per_grid, for_3d=for_3d, data='evaluation',
-                      num_workers=param.num_workers, make_images=param.make_images)
+                      num_workers=param.num_workers, make_images=param.make_images,
+                      exp_name=param.exp_name, if_ours=param.if_ours)
     else:
         print('Invalid dataset type.')

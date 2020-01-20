@@ -33,10 +33,14 @@ if __name__ == '__main__':
         type=int,
         default=4,
         help='Number of workers for unrolling multiple paths in parallel.')
+    parser.add_argument(
+        '--exp_name',
+        type=str,
+        help='Name of the data and results folder.')
     param = parser.parse_args()
-    
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
-    
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
     # train net
     if param.dim == 2:
         if param.net == 'VIN':
@@ -45,27 +49,27 @@ if __name__ == '__main__':
             net = HVIN(param.size, k = param.k)
         else:
             net = Abstraction_VIN_2D(param.size, k = param.k)
-        
+
         # load network state
-        if os.path.isfile('network/%s.pt' % net.name):
+        if os.path.isfile('network/' + param.exp_name + '/%s.pt' % net.name):
             print("Using existing network.")
-            net.load_state_dict(torch.load('network/%s.pt' % net.name))
+            net.load_state_dict(torch.load('network/' + param.exp_name + '/%s.pt' % net.name))
         else:
             print("New network initialized.")
-               
+
         net.to(device)
-        net.test(batch_size=param.batch, validation=False)
-        net.rollout(batch_size = param.batch, validation=False, num_workers=param.workers)
+        net.test(batch_size=param.batch, validation=False, param.exp_name)
+        net.rollout(batch_size = param.batch, validation=False, num_workers=param.workers, exp_name=param.exp_name)
     else:
         net = Abstraction_VIN_3D(param.size, k = param.k)
-        
+
         # load network state
-        if os.path.isfile('network/%s.pt' % net.name):
+        if os.path.isfile('network/' + param.exp_name + '/%s.pt' % net.name):
             print("Using existing network.")
-            net.load_state_dict(torch.load('network/%s.pt' % net.name))
+            net.load_state_dict(torch.load('network/' + param.exp_name + '/%s.pt' % net.name))
         else:
             print("New network initialized.")
-            
+
         net.to(device)
         net.test(batch_size=param.batch, validation=False)
         net.rollout(batch_size = param.batch, validation=False, num_workers=param.workers)

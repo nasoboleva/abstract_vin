@@ -67,17 +67,21 @@ if __name__ == '__main__':
         type=bool,
         default=True,
         help='Plot training statistics. [True, False]')
+    parser.add_argument(
+        '--exp_name',
+        type=str,
+        help='Name of the data and results folder.')
     param = parser.parse_args()
-    
-    
+
+
     if param.iterations is None:
         if param.dim==2:
             param.iterations=1500
         else:
             pram.iterations=7
-    
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
-    
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
     # train net
     if param.dim == 2:
         if param.net == 'VIN':
@@ -86,25 +90,26 @@ if __name__ == '__main__':
             net = HVIN(param.size, k = param.k)
         else:
             net = Abstraction_VIN_2D(param.size, k = param.k)
-        
+
         # load network state
-        if os.path.isfile('network/%s.pt' % net.name):
+        if os.path.isfile('network/' + param.exp_name + '/%s.pt' % net.name):
             print("Using existing network.")
-            net.load_state_dict(torch.load('network/%s.pt' % net.name))
+            net.load_state_dict(torch.load('network/' + param.exp_name + '/%s.pt'  % net.name))
         else:
             print("New network initialized.")
-            
+
         net.to(device)
-        net.train(num_iterations=param.iterations, batch_size=param.batch, validation_step=param.validation_step, lr=param.lr,plot_curves=param.plot_stat, print_stat=param.print_stat)
+        net.train(num_iterations=param.iterations, batch_size=param.batch, validation_step=param.validation_step,
+                  lr=param.lr,plot_curves=param.plot_stat, print_stat=param.print_stat, exp_name=param.exp_name)
     else:
         net = Abstraction_VIN_3D(param.size, k = param.k)
-        
+
         # load network state
-        if os.path.isfile('network/%s.pt' % net.name):
+        if os.path.isfile('network/' + param.exp_name + '/%s.pt'  % net.name):
             print("Using existing network.")
-            net.load_state_dict(torch.load('network/%s.pt' % net.name))
+            net.load_state_dict(torch.load('network/' + param.exp_name + '/%s.pt'  % net.name))
         else:
             print("New network initialized.")
-            
+
         net.to(device)
         net.train(num_iterations=param.iterations, batch_size=param.batch, lr=param.lr, lr_cycle_length=param.lr_cycle_length, T_mult=param.lr_cycle_increase, lr_decay_factor=param.lr_cycle_decay, plot_curves=param.plot_stat, print_stat=param.print_stat)

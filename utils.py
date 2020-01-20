@@ -222,7 +222,7 @@ def get_path_length(path, dim=2, leg_x=2, leg_y=2, rotation_step_size=2*np.pi/16
 #           -opt_path: expert path
 #           -path_list: list of paths predicted by the different networks
 #           -path_labels: list of names of the corresponding networks
-def visualize_2d(map, goal, opt_path, path_list, path_labels, number):
+def visualize_2d(map, goal, opt_path, path_list, path_labels, number, exp_name="1"):
     colours = ['b', 'r', 'orange']
 
     opt_path = np.array(opt_path)
@@ -262,7 +262,8 @@ def visualize_2d(map, goal, opt_path, path_list, path_labels, number):
     plt.xlim(map.size()[0]//4-0.5, map.size()[0]//4-0.5+map.size()[0]//2)
     plt.ylim(map.size()[1]//4-0.5, map.size()[1]//4-0.5+map.size()[1]//2)
 
-    plt.savefig('./visualization/img_' + str(number) + '.png')
+    os.makedir('./visualization/' + exp_name + '/', exist_ok=True)
+    plt.savefig('./visualization/' + exp_name + '/img_' + str(number) + '.png')
 
     #plt.draw()
     #plt.waitforbuttonpress(0)

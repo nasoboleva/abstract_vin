@@ -668,9 +668,9 @@ class Abstraction_VIN_2D(nn.Module):
         return _rollout(net, batch_size=batch_size, validation=validation, num_workers=num_workers)
 
 # train the network using RMSprop
-def _train(net, num_iterations=1, batch_size=128, validation_step=20, lr= 0.001, plot_curves=False, print_stat=True):
+def _train(net, num_iterations=1, batch_size=128, validation_step=20, lr= 0.001, plot_curves=False, print_stat=True, exp_name="1"):
     # load training data
-    dataset = GridDataset_2d(net.size, data_type='training', full_paths=False)
+    dataset = GridDataset_2d(net.size, data_type='training', full_paths=False, exp_name)
     trainloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
     criterion = nn.CrossEntropyLoss()
@@ -686,6 +686,8 @@ def _train(net, num_iterations=1, batch_size=128, validation_step=20, lr= 0.001,
     print('Expert demonstrations: ', len(dataset))
     print('Optimizer: ', optimizer)
 
+    os.makedirs('network/' + exp_name + '/', exist_ok=True)
+    os.makedirs('learning_curves/' + exp_name + '/', exist_ok=True)
     for epoch in range(num_iterations):
         running_loss = 0.0
         num_batches = 0
@@ -729,33 +731,33 @@ def _train(net, num_iterations=1, batch_size=128, validation_step=20, lr= 0.001,
             # save network state which achieves best success rate on validation set
             if success > best_success:
                 best_success = success
-                torch.save(net.state_dict(), 'network/%s.pt' % net.name)
+                torch.save(net.state_dict(), 'network/' + exp_name + '/%s.pt' % net.name)
 
             # print training statistics to text file
             if print_stat:
                 error_stat_ = np.array(error_stat)
                 epoch_list = np.arange(1,len(error_stat)+1)
                 train_data = np.column_stack((epoch_list, error_stat_))
-                np.savetxt('learning_curves/training_loss_%s.txt' % net.name, train_data, delimiter = " ", fmt=("%d","%f"), header = "Epoch Loss")
+                np.savetxt('network/' + exp_name + '/training_loss_%s.txt' % net.name, train_data, delimiter = " ", fmt=("%d","%f"), header = "Epoch Loss")
 
                 epoch_list = np.arange(validation_step, epoch+2, validation_step)
                 evaluation_stat_ = np.array(evaluation_stat)
                 rollout_stat_ = np.array(rollout_stat)
                 validation_data = np.column_stack((epoch_list, evaluation_stat_, rollout_stat_))
-                np.savetxt('learning_curves/validation_%s.txt' % net.name, validation_data, delimiter = " ", fmt=("%d","%f","%f"), header = "Epoch Accuracy Success")
+                np.savetxt('network/' + exp_name + '/validation_%s.txt' % net.name, validation_data, delimiter = " ", fmt=("%d","%f","%f"), header = "Epoch Accuracy Success")
             # plot learning curves
             if plot_curves:
                 plt.figure(0)
                 plt.plot(range(len(error_stat)), error_stat)
-                plt.savefig('learning_curves/training_loss_%s.png' % net.name)
+                plt.savefig('network/' + exp_name + '/training_loss_%s.png' % net.name)
 
                 plt.figure(1)
                 plt.plot(range(len(evaluation_stat)), evaluation_stat)
-                plt.savefig('learning_curves/accuracy_%s.png' % net.name)
+                plt.savefig('network/' + exp_name + '/accuracy_%s.png' % net.name)
 
                 plt.figure(2)
                 plt.plot(range(len(rollout_stat)), rollout_stat)
-                plt.savefig('learning_curves/success_%s.png' % net.name)
+                plt.savefig('network/' + exp_name + '/success_%s.png' % net.name)
 
         else:
             print('[epoch %d] loss per batch: %.10f, time: %f' % (epoch + 1, running_loss / num_batches, duration_epoch))
@@ -764,20 +766,20 @@ def _train(net, num_iterations=1, batch_size=128, validation_step=20, lr= 0.001,
     print('')
 
     # get network state with best success rate on validation set
-    net.load_state_dict(torch.load('network/%s.pt' % net.name))
+    net.load_state_dict(torch.load('network/' + exp_name + '/%s.pt'% net.name))
 
 # compute next-step accuracy
-def _test(net, batch_size=128, validation=True, full_length=True):
+def _test(net, batch_size=128, validation=True, full_length=True, exp_name="1"):
     with torch.no_grad():
         if validation:
             # load validation set
-            dataset = GridDataset_2d(net.size, data_type='validation', full_paths=full_length)
+            dataset = GridDataset_2d(net.size, data_type='validation', full_paths=full_length, exp_name)
         else:
             print('Starting Test.')
             print('Full length: ', full_length)
 
             # load evaluation set
-            dataset = GridDataset_2d(net.size, data_type='evaluation', full_paths=full_length)
+            dataset = GridDataset_2d(net.size, data_type='evaluation', full_paths=full_length, exp_name)
 
         testloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=4)
 
@@ -856,7 +858,7 @@ def _get_path(net, dataset, map, map_index, start_pos, goal_pos, max_number_step
             return (path, False)
 
 # compute success rate for whole paths
-def _rollout(net, batch_size=128, validation=True, num_workers=4):
+def _rollout(net, batch_size=128, validation=True, num_workers=4, exp_name="1"):
     with torch.no_grad():
         diff = 0.
         net_length = 0.
@@ -865,9 +867,9 @@ def _rollout(net, batch_size=128, validation=True, num_workers=4):
         # load dataset and make it available to all workers
         global rollout_data
         if validation:
-            rollout_data = GridDataset_2d(net.size, data_type='validation', full_paths=True)
+            rollout_data = GridDataset_2d(net.size, data_type='validation', full_paths=True, exp_name)
         else:
-            rollout_data = GridDataset_2d(net.size, data_type='evaluation', full_paths=True)
+            rollout_data = GridDataset_2d(net.size, data_type='evaluation', full_paths=True, exp_name)
         iterations = rollout_data.num_examples
 
         # list of all tasks (describes task through map and path indices)
@@ -881,15 +883,18 @@ def _rollout(net, batch_size=128, validation=True, num_workers=4):
             print("Max expert path length:", rollout_data.max_path_length)
             start_time = time.time()
 
-        pool = Pool(processes=num_workers)
+        #pool = Pool(processes=num_workers)
         while len(open_paths) != 0 and path_length < 2*rollout_data.max_path_length:
-            parameters = []
+            #parameters = []
+            inputs = []
             # get map indices and current positions for all open paths
             for map_id, path_id in open_paths:
-                parameters.append((map_id, paths[map_id][path_id][-1], rollout_data.expert_paths[map_id][path_id][-1]))
+                parameters = (map_id, paths[map_id][path_id][-1], rollout_data.expert_paths[map_id][path_id][-1])
+                inputs += [_get_inputs(parameters)]
+
 
             # get inputs for all open paths
-            inputs = pool.map(_get_inputs, parameters)
+            #inputs = pool.map(_get_inputs, parameters)
 
             path_length += 1
             current_open_task_id = 0
@@ -940,7 +945,7 @@ def _rollout(net, batch_size=128, validation=True, num_workers=4):
                 if path_length % 20 == 0:
                     print("Computed paths up to length ", path_length)
 
-        pool.close()
+        #pool.close()
 
         # count successful paths
         num_successful = 0

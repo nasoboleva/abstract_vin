@@ -11,7 +11,7 @@ from vin.dataloader import GridDataset_2d, GridDataset_3d
 from utils import visualize_2d, visualize_3d, get_path_length
 
 # plot 2D grid world paths
-def plot_2d(size, map_indices, path_indices, vin=True, hvin=True, abstraction_vin=True):
+def plot_2d(size, map_indices, path_indices, vin=True, hvin=True, abstraction_vin=True, exp_name='1'):
     # load evaluation set
     dataset = GridDataset_2d(size, data_type='evaluation', full_paths=True)
 
@@ -20,8 +20,8 @@ def plot_2d(size, map_indices, path_indices, vin=True, hvin=True, abstraction_vi
         vin = VIN(size)
 
         # load network state
-        if os.path.isfile('network/%s.pt' % vin.name):
-            vin.load_state_dict(torch.load('network/%s.pt' % vin.name))
+        if os.path.isfile('network/' + exp_name + '/%s.pt' % vin.name):
+            vin.load_state_dict(torch.load('network/' + exp_name + '/%s.pt' % vin.name))
             vin.to(vin.device)
         else:
             print("VIN was not trained.")
@@ -31,8 +31,8 @@ def plot_2d(size, map_indices, path_indices, vin=True, hvin=True, abstraction_vi
         hvin = HVIN(size)
 
         # load network state
-        if os.path.isfile('network/%s.pt' % hvin.name):
-            hvin.load_state_dict(torch.load('network/%s.pt' % hvin.name))
+        if os.path.isfile('network/' + exp_name + '/%s.pt' % hvin.name):
+            hvin.load_state_dict(torch.load('network/' + exp_name + '/%s.pt' % hvin.name))
             hvin.to(hvin.device)
         else:
             print("HVIN was not trained.")
@@ -42,8 +42,8 @@ def plot_2d(size, map_indices, path_indices, vin=True, hvin=True, abstraction_vi
         abstraction_vin = Abstraction_VIN_2D(size)
 
         # load network state
-        if os.path.isfile('network/%s.pt' % abstraction_vin.name):
-            abstraction_vin.load_state_dict(torch.load('network/%s.pt' % abstraction_vin.name))
+        if os.path.isfile('network/' + exp_name + '/%s.pt' % abstraction_vin.name):
+            abstraction_vin.load_state_dict(torch.load('network/' + exp_name + '/%s.pt' % abstraction_vin.name))
             abstraction_vin.to(abstraction_vin.device)
         else:
             print("Abstraction_VIN was not trained.")
@@ -153,14 +153,18 @@ if __name__ == '__main__':
         type=int,
         default=None,
         help='Index of the path that shall be plotted. If none is given, it will be chosen randomly.')
+    parser.add_argument(
+        '--exp_name',
+        type=str,
+        help='Name of the data and results folder.')
     param = parser.parse_args()
 
     if param.dim == 2:
         # load evaluation set
-        dataset = GridDataset_2d(param.size, data_type='evaluation', full_paths=True)
+        dataset = GridDataset_2d(param.size, data_type='evaluation', full_paths=True, param.exp_name)
     elif param.dim == 3:
         # load evaluation set
-        dataset = GridDataset_3d(param.size, data_type='evaluation', full_paths=True)
+        dataset = GridDataset_3d(param.size, data_type='evaluation', full_paths=True, param.exp_name)
 
     if param.map_id is not None or param.path_id is not None:
         param.num = 1
@@ -176,6 +180,6 @@ if __name__ == '__main__':
         path_indices = [param.path_id]
 
     if param.dim == 2:
-        plot_2d(param.size, map_indices, path_indices)
+        plot_2d(param.size, map_indices, path_indices, param.exp_name)
     elif param.dim == 3:
         plot_3d(param.size, map_indices, path_indices)
