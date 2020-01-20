@@ -105,16 +105,16 @@ class VIN(nn.Module):
         logits = self.fc(q_out)
         return logits
 
-    def train(self, num_iterations=1, batch_size=128, validation_step=20, lr= 0.001, plot_curves=False, print_stat=True):
-        return _train(self, num_iterations=num_iterations, batch_size=batch_size, validation_step=validation_step, lr=lr, plot_curves=plot_curves, print_stat=print_stat)
+    def train(self, num_iterations=1, batch_size=128, validation_step=20, lr= 0.001, plot_curves=False, print_stat=True, exp_name='1'):
+        return _train(self, num_iterations=num_iterations, batch_size=batch_size, validation_step=validation_step, lr=lr, plot_curves=plot_curves, print_stat=print_stat, exp_name=exp_name)
 
     # compute next-step accuracy
-    def test(self, batch_size=128, validation=True, full_length=True):
-        return _test(self, batch_size=batch_size, validation=validation, full_length=full_length)
+    def test(self, batch_size=128, validation=True, full_length=True, exp_name='1'):
+        return _test(self, batch_size=batch_size, validation=validation, full_length=full_length, exp_name=exp_name)
 
     # compute success rate for whole paths
-    def rollout(net, batch_size=128, validation=True, num_workers=4):
-        return _rollout(net, batch_size=batch_size, validation=validation, num_workers=num_workers)
+    def rollout(net, batch_size=128, validation=True, num_workers=4, exp_name='1'):
+        return _rollout(net, batch_size=batch_size, validation=validation, num_workers=num_workers, exp_name=exp_name)
 
 # Hierarchical Value Iteration Network
 # (planning on multiple resolutions without compensation lower resolution with additional features)
