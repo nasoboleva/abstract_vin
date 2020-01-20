@@ -774,13 +774,13 @@ def _test(net, batch_size=128, validation=True, full_length=True, exp_name="1"):
     with torch.no_grad():
         if validation:
             # load validation set
-            dataset = GridDataset_2d(net.size, data_type='validation', full_paths=full_length, exp_name=param.exp_name)
+            dataset = GridDataset_2d(net.size, data_type='validation', full_paths=full_length, exp_name=exp_name)
         else:
             print('Starting Test.')
             print('Full length: ', full_length)
 
             # load evaluation set
-            dataset = GridDataset_2d(net.size, data_type='evaluation', full_paths=full_length, exp_name=param.exp_name)
+            dataset = GridDataset_2d(net.size, data_type='evaluation', full_paths=full_length, exp_name=exp_name)
 
         testloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=4)
 
