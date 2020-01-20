@@ -263,7 +263,7 @@ def visualize_2d(map, goal, opt_path, path_list, path_labels, number, exp_name="
     plt.xlim(map.size()[0]//4-0.5, map.size()[0]//4-0.5+map.size()[0]//2)
     plt.ylim(map.size()[1]//4-0.5, map.size()[1]//4-0.5+map.size()[1]//2)
 
-    os.makedir('./visualization/' + exp_name + '/', exist_ok=True)
+    os.makedirs('./visualization/' + exp_name + '/', exist_ok=True)
     plt.savefig('./visualization/' + exp_name + '/img_' + str(number) + '.png')
 
     #plt.draw()
