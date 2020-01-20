@@ -670,7 +670,7 @@ class Abstraction_VIN_2D(nn.Module):
 # train the network using RMSprop
 def _train(net, num_iterations=1, batch_size=128, validation_step=20, lr= 0.001, plot_curves=False, print_stat=True, exp_name="1"):
     # load training data
-    dataset = GridDataset_2d(net.size, data_type='training', full_paths=False, exp_name)
+    dataset = GridDataset_2d(net.size, data_type='training', full_paths=False, exp_name=exp_name)
     trainloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
     criterion = nn.CrossEntropyLoss()
@@ -867,9 +867,9 @@ def _rollout(net, batch_size=128, validation=True, num_workers=4, exp_name="1"):
         # load dataset and make it available to all workers
         global rollout_data
         if validation:
-            rollout_data = GridDataset_2d(net.size, data_type='validation', full_paths=True, exp_name)
+            rollout_data = GridDataset_2d(net.size, data_type='validation', full_paths=True, exp_name=exp_name)
         else:
-            rollout_data = GridDataset_2d(net.size, data_type='evaluation', full_paths=True, exp_name)
+            rollout_data = GridDataset_2d(net.size, data_type='evaluation', full_paths=True, exp_name=exp_name)
         iterations = rollout_data.num_examples
 
         # list of all tasks (describes task through map and path indices)
