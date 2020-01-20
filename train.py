@@ -1,6 +1,7 @@
 import torch
 import argparse
 import os.path
+import os
 
 from vin.nets_2d import VIN, HVIN, Abstraction_VIN_2D
 from vin.net_3d import Abstraction_VIN_3D

@@ -2,6 +2,8 @@ import torch
 import numpy as np
 import argparse
 import os.path
+import os
+
 
 from vin.nets_2d import VIN, HVIN, Abstraction_VIN_2D
 from vin.nets_2d import _get_path as _get_path_2d
