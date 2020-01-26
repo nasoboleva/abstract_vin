@@ -115,8 +115,8 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
             while num_paths < num_paths_per_grid:
                 counter += 1
                 # sample random goal state
-                x = np.random.randint(size//2 + example.leg_x, high= size//2 + size-example.leg_x)
-                y = np.random.randint(size//2 + size-example.leg_y - 3, high= size//2 + size-example.leg_y)
+                x = np.random.randint(1, high= size - 1)
+                y = np.random.randint( size-1 - 3, high=  size-1)
                 if for_3d:
                     # sample random goal orientation
                     theta = np.random.randint(0,high=example.num_orientations)

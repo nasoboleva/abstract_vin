@@ -4,7 +4,6 @@ import argparse
 import os.path
 import os
 
-
 from vin.nets_2d import VIN, HVIN, Abstraction_VIN_2D
 from vin.nets_2d import _get_path as _get_path_2d
 from vin.net_3d import Abstraction_VIN_3D
@@ -15,7 +14,7 @@ from utils import visualize_2d, visualize_3d, get_path_length
 # plot 2D grid world paths
 def plot_2d(size, map_indices, path_indices, vin=True, hvin=True, abstraction_vin=True, exp_name='1'):
     # load evaluation set
-    dataset = GridDataset_2d(size, data_type='evaluation', full_paths=True)
+    dataset = GridDataset_2d(size, data_type='evaluation', full_paths=True, exp_name=exp_name)
 
     # load networks
     if vin:
@@ -96,7 +95,7 @@ def plot_2d(size, map_indices, path_indices, vin=True, hvin=True, abstraction_vi
             net_paths.append(None)
 
         # plot paths
-        visualize_2d(map, goal, optimal_path, net_paths, ['Abstraction_VIN','VIN','HVIN'], map_index)
+        visualize_2d(map, goal, optimal_path, net_paths, ['Abstraction_VIN','VIN','HVIN'], map_index, exp_name=exp_name)
 
 # plot paths for 3D task
 def plot_3d(size, map_indices, path_indices):
@@ -182,6 +181,4 @@ if __name__ == '__main__':
         path_indices = [param.path_id]
 
     if param.dim == 2:
-        plot_2d(param.size, map_indices, path_indices, param.exp_name)
-    elif param.dim == 3:
-        plot_3d(param.size, map_indices, path_indices)
+        plot_2d(param.size, map_indices, path_indices, exp_name=param.exp_name)

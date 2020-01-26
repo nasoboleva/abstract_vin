@@ -721,11 +721,12 @@ def _train(net, num_iterations=1, batch_size=128, validation_step=20, lr= 0.001,
         error_stat.append(running_loss/num_batches)
 
         # test network on validation set
+        print(exp_name)
         if epoch % validation_step == validation_step-1:
-            accuracy = net.test(batch_size=batch_size, full_length=True, validation=True)
-            accuracy_sampled = net.test(batch_size=batch_size, full_length=False, validation=True)
+            accuracy = net.test(batch_size=batch_size, full_length=True, validation=True, exp_name=exp_name)
+            accuracy_sampled = net.test(batch_size=batch_size, full_length=False, validation=True, exp_name=exp_name)
             evaluation_stat.append(accuracy)
-            success=net.rollout(batch_size=batch_size, validation=True)
+            success=net.rollout(batch_size=batch_size, validation=True, exp_name=exp_name)
             rollout_stat.append(success)
             print('[epoch %d] loss per batch: %.10f, accuracy (full): %f, accuracy (sampled): %f, success: %f,time: %f' % (epoch + 1, running_loss / num_batches, accuracy, accuracy_sampled, success, duration_epoch))
 
