@@ -34,7 +34,7 @@ class LabeledExample:
         if if_ours:
             while self.number_of_obstacles < number:
                 dencity = 0.2
-                max_proportion = math.floor(math.sqrt(self.size * 4 ** 2 * dencity // 6))
+                max_proportion = math.floor(math.sqrt((self.size * 2) ** 2 * dencity // 6))
                 proportion = np.random.choice(np.arange(1, max_proportion + 1))
                 obst_width = 2 * proportion
                 obst_height = 3 * proportion
@@ -94,12 +94,16 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
         example.add_random_rectangular_obstacles(number_of_obstacles, max_obs_height, max_obs_width, if_ours)
 
         # set start position at the center of the map
-        example.start = (size,size)
+        example.start = (size, size)
         # make sure that the start position does not contain any obstacles
         if for_3d:
             example.map[size-example.leg_x:size+example.leg_x+1,size-example.leg_y:size+example.leg_y+1] = 0
         else:
-            example.map[size,size] = 0
+            if if_ours:
+                if example.map[example.start[0], example.start[1]] != 0:
+                    continue
+            else:
+                example.map[size,size] = 0
 
         num_paths = 0
         counter = 0
@@ -115,8 +119,12 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
             while num_paths < num_paths_per_grid:
                 counter += 1
                 # sample random goal state
-                x = np.random.randint(1, high= size - 1)
-                y = np.random.randint( size-1 - 3, high=  size-1)
+                if if_ours:
+                    x = np.random.randint(1, high= size - 1)
+                    y = np.random.randint( size-1 - 3, high=  size-1)
+                else:
+                    x = np.random.randint(size//2+example.leg_x, high= size//2 + size-example.leg_x)
+                    y = np.random.randint(size//2+example.leg_y, high= size//2 + size-example.leg_y)
                 if for_3d:
                     # sample random goal orientation
                     theta = np.random.randint(0,high=example.num_orientations)
@@ -170,11 +178,19 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
             while num_paths < num_paths_per_grid:
                 counter += 1
                 # add random goal
-                x = np.random.randint(size//2+example.leg_x, high= size//2 + size-example.leg_x)
-                y = np.random.randint(size//2+example.leg_y, high= size//2 + size-example.leg_y)
+                if if_ours:
+                    x = np.random.randint(1, high= size - 1)
+                    y = np.random.randint( size-1 - 3, high=  size-1)
+                else:
+                    x = np.random.randint(size//2+example.leg_x, high= size//2 + size-example.leg_x)
+                    y = np.random.randint(size//2+example.leg_y, high= size//2 + size-example.leg_y)
                 example.goal = (x,y)
                 # ensure that goal position is free
-                example.map[x,y] = 0
+                if if_ours:
+                    if example.map[x,y] != 0:
+                        continue
+                else:
+                    example.map[x,y] = 0
                 if for_3d:
                     # sample random start and goal orientations
                     example.orientation = np.random.randint(0,high=example.num_orientations)
