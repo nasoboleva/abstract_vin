@@ -166,8 +166,13 @@ class GridDataset_3d(Dataset):
         map_index, pos_t1, pos_t2 = parameters
         rollout_img = self.grids[map_index]
 
-        # get occupancy map by cropping patch from full environment map around start position
-        occ_map = rollout_img[pos_t1[0] - self.size//2:pos_t1[0]+self.size//2,pos_t1[1] - self.size//2:pos_t1[1]+self.size//2]
+        if pos_t1[1]+self.size//2 > occ_map.size()[0]:
+            print('out ', end='')
+            occ_map = rollout_img[pos_t1[0] - self.size//2:pos_t1[0]+self.size//2,-self.size:]
+        else:
+            # get occupancy map by cropping patch from full environment map around start position
+            occ_map = rollout_img[pos_t1[0] - self.size//2:pos_t1[0]+self.size//2,pos_t1[1] - self.size//2:pos_t1[1]+self.size//2]
+        print(occ_map.size())
 
         # get goal map (all cells contain '0' except for goal cell, which contains the index of the discrete goal orientation (from 1 to 16)
         goal_map = torch.FloatTensor(self.size, self.size).fill_(0)
