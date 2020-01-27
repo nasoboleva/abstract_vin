@@ -37,12 +37,12 @@ class LabeledExample:
             while self.number_of_obstacles < number:
                 dencity = 0.2
                 indent = 3
-                max_proportion = math.floor(math.sqrt((self.size) ** 2 * dencity // 6))
+                max_proportion = math.floor(math.sqrt((self.size // 2) ** 2 * dencity // 6))
                 proportion = np.random.choice(np.arange(1, max_proportion + 1))
                 obst_width = 2 * proportion
                 obst_height = 3 * proportion
-                x = np.random.choice(np.arange(indent, self.size - 1 - indent - obst_height))
-                y = np.random.choice(np.arange(self.size - 1 - obst_height ))
+                x = np.random.choice(np.arange(self.size // 2 + indent, self.size - 1 - indent - obst_height))
+                y = np.random.choice(np.arange(self.size // 4, self.size // 4 * 3 - 1 - obst_height ))
                 if x <= self.size // 2 <= x + obst_width or \
                    x <= self.size // 2 <= x + obst_height or \
                    y <= self.size // 2 <= y + obst_height or \
@@ -132,7 +132,7 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
                 counter += 1
                 # sample random goal state
                 if if_ours:
-                    x = np.random.randint(1, high= size * 2 - 1)
+                    x = np.random.randint(size // 2, high= size // 2 * 3 - 1)
                     y = np.random.randint( size * 2-1 - 3, high=  size* 2-1)
                     if example.map[x, y] != 0:
                         failed = True
@@ -298,12 +298,16 @@ def generate_data(number_of_examples, size, min_number_of_obstacles,
                 curr_map_img[start[0], start[1]] = 0
                 curr_map_img[goal[0], goal[1]] = 0
 
-                imageio.imwrite(file_path + '_' + str(i) + '_' + str(j) + '.png',
+                imageio.imwrite(file_path + '_' + str(i) + '_' + str(j) + 'full.png',
                                 curr_map_img.astype('uint8'))
+                imageio.imwrite(file_path + '_' + str(i) + '_' + str(j) + '.png',
+                                curr_map_img[size // 2:-(size //2), size:].astype('uint8'))
                 for path_cell in path[1:-1]:
                     curr_map_img[path_cell[0], path_cell[1]] = 0
-                imageio.imwrite(file_path + '_' + str(i) + '_' + str(j) + '_log.png',
+                imageio.imwrite(file_path + '_' + str(i) + '_' + str(j) + '_logfull.png',
                                 curr_map_img.astype('uint8'))
+                imageio.imwrite(file_path + '_' + str(i) + '_' + str(j) + '_log.png',
+                                curr_map_img[size // 2:-(size //2), size:].astype('uint8'))
 
         inputs.append(map)
         paths.append(path_list)
