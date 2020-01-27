@@ -8,9 +8,11 @@ import argparse
 import imageio
 import os
 import math
+import matplotlib.pyplot as plt
 
-from astar import astar_planner_2d, astar_planner_3d, dijkstra_planner_2d, dijkstra_planner_3d
 from utils import path_to_action_vectors, extract_path
+from astar import astar_planner_2d, astar_planner_3d, dijkstra_planner_2d, dijkstra_planner_3d
+
 
 # class for environment representation (containing obstacle map, start and goal pose)
 class LabeledExample:
@@ -34,13 +36,18 @@ class LabeledExample:
         if if_ours:
             while self.number_of_obstacles < number:
                 dencity = 0.2
+                indent = 3
                 max_proportion = math.floor(math.sqrt((self.size) ** 2 * dencity // 6))
                 proportion = np.random.choice(np.arange(1, max_proportion + 1))
                 obst_width = 2 * proportion
                 obst_height = 3 * proportion
-                print(obst_width, obst_height, self.size)
-                x = np.random.choice(np.arange(3, self.size - 2 - 3 - obst_height))
-                y = np.random.choice(np.arange(self.size - 2 - obst_height ))
+                x = np.random.choice(np.arange(indent, self.size - 1 - indent - obst_height))
+                y = np.random.choice(np.arange(self.size - 1 - obst_height ))
+                if x <= self.size // 2 <= x + obst_width or \
+                   x <= self.size // 2 <= x + obst_height or \
+                   y <= self.size // 2 <= y + obst_height or \
+                   y <= self.size // 2 <= y + obst_width:
+                   continue
                 if self.number_of_obstacles % 2 == 0:
                     for dx in range(obst_width):
                         for dy in range(obst_height):
@@ -91,9 +98,10 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
         action_list = []
 
         # add random obstacles
-        number_of_obstacles = np.random.randint(4*min_number_of_obstacles, high=4*max_number_of_obstacles)
-        example.add_random_rectangular_obstacles(number_of_obstacles, max_obs_height, max_obs_width, if_ours)
+        obsts = np.random.choice(np.arange(1, max_number_of_obstacles + 1))
 
+        #number_of_obstacles = np.random.randint(4*min_number_of_obstacles, high=4*max_number_of_obstacles)
+        example.add_random_rectangular_obstacles(obsts, max_obs_height, max_obs_width, if_ours)
         # set start position at the center of the map
         example.start = (size, size)
         # make sure that the start position does not contain any obstacles
@@ -101,7 +109,9 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
             example.map[size-example.leg_x:size+example.leg_x+1,size-example.leg_y:size+example.leg_y+1] = 0
         else:
             if if_ours:
+
                 if example.map[example.start[0], example.start[1]] != 0:
+                    failed = True
                     continue
             else:
                 example.map[size,size] = 0
@@ -115,14 +125,18 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
                 example.orientation = np.random.randint(0,high=example.num_orientations)
                 distances, predecessors = dijkstra_planner_3d(example)
             else:
-                distances, predecessors = dijkstra_planner_2d(example)
+
+                distances, predecessors = dijkstra_planner_2d(example, if_ours)
 
             while num_paths < num_paths_per_grid:
                 counter += 1
                 # sample random goal state
                 if if_ours:
-                    x = np.random.randint(1, high= size - 1)
-                    y = np.random.randint( size-1 - 3, high=  size-1)
+                    x = np.random.randint(1, high= size * 2 - 1)
+                    y = np.random.randint( size * 2-1 - 3, high=  size* 2-1)
+                    if example.map[x, y] != 0:
+                        failed = True
+                        break
                 else:
                     x = np.random.randint(size//2+example.leg_x, high= size//2 + size-example.leg_x)
                     y = np.random.randint(size//2+example.leg_y, high= size//2 + size-example.leg_y)
@@ -155,6 +169,8 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
                 else:
                     # check if valid path exists:
                     if distances[x,y] != float('Inf'):
+                        #print(x, y)
+                        #plt.imshow(example.map)
                         # get optimal path
                         optimal_path = list(reversed(extract_path((size,size),(x,y),predecessors, dim=2)))
                         if len(optimal_path) <= 1:
@@ -180,8 +196,8 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
                 counter += 1
                 # add random goal
                 if if_ours:
-                    x = np.random.randint(1, high= size - 1)
-                    y = np.random.randint( size-1 - 3, high=  size-1)
+                    x = np.random.randint(1, high= size*2 - 1)
+                    y = np.random.randint( size* 2-1 - 3, high=  size*2-1)
                 else:
                     x = np.random.randint(size//2+example.leg_x, high= size//2 + size-example.leg_x)
                     y = np.random.randint(size//2+example.leg_y, high= size//2 + size-example.leg_y)
@@ -198,7 +214,7 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
                     example.goal_orientation = np.random.randint(0,high=example.num_orientations)
                     optimal_path = list(reversed(astar_planner_3d(example)))
                 else:
-                    optimal_path = list(reversed(astar_planner_2d(example, pos_as_tensor=True)))
+                    optimal_path = list(reversed(astar_planner_2d(example)))
                 if len(optimal_path) <= 1:
                     if counter > 20:
                         failed = True

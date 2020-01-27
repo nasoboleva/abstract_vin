@@ -471,6 +471,8 @@ class Abstraction_VIN_2D(nn.Module):
     def forward(self, occ_map, goal_map):
         # Create abstraction maps:
             # extract Level-1 map
+        #level_1 = occ_map[:,:,self.size//2 - self.size_eff//2: self.size//2 + self.size_eff//2,0:self.size_eff]
+
         level_1 = occ_map[:,:,self.size//2 - self.size_eff//2: self.size//2 + self.size_eff//2,self.size//2 - self.size_eff//2: self.size//2 + self.size_eff//2]
 
             # create Level-2 representation
