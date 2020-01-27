@@ -672,6 +672,7 @@ class Abstraction_VIN_2D(nn.Module):
 def _train(net, num_iterations=1, batch_size=128, validation_step=20, lr= 0.001, plot_curves=False, print_stat=True, exp_name="1"):
     # load training data
     dataset = GridDataset_2d(net.size, data_type='training', full_paths=False, exp_name=exp_name)
+    #print(dataset.size())
     trainloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
     criterion = nn.CrossEntropyLoss()
@@ -698,7 +699,7 @@ def _train(net, num_iterations=1, batch_size=128, validation_step=20, lr= 0.001,
         for i, data in enumerate(trainloader, 0):
             # reset gradients to zero
             optimizer.zero_grad()
-
+            print(i)
             # get training data
             occ_maps, goal_maps, labels = data['environment'].to(net.device), data['goal'].to(net.device), data['label'].to(net.device)
 

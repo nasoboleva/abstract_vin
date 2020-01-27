@@ -28,7 +28,7 @@ class GridDataset_2d(Dataset):
         self.num_paths_per_map = len(self.expert_actions[0])
         self.full_paths=full_paths              # bool: If true, use complete expert path
                                                 #       if false, randomly choose sub-path at each iteration
-
+        print(len(self.grids), len(self.expert_paths),  self.num_paths_per_map)
         max_path_length = 0
         for path_list in self.expert_paths:
             for path in path_list:
