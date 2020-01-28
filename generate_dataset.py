@@ -268,25 +268,37 @@ def generate_data(number_of_examples, size, min_number_of_obstacles,
 
     if data=='training':
         if for_3d:
+            os.makedirs('data_sets/3D/' + str(exp_name) + '_imgs', exist_ok=True)
             os.makedirs('data_sets/3D/' + str(exp_name), exist_ok=True)
-            file_path = 'data_sets/3D/' + str(exp_name) + '/trainingset_'+str(size)
+            file_path = 'data_sets/3D/' + str(exp_name) + '_imgs/trainingset_'+str(size)
+            file_path_vin = 'data_sets/3D/' + str(exp_name) + '/trainingset_'+str(size)
         else:
+            os.makedirs('data_sets/2D/' + str(exp_name) + '_imgs', exist_ok=True)
             os.makedirs('data_sets/2D/' + str(exp_name), exist_ok=True)
-            file_path = 'data_sets/2D/' + str(exp_name) + '/trainingset_'+str(size)
+            file_path = 'data_sets/2D/' + str(exp_name) + '_imgs/trainingset_'+str(size)
+            file_path_vin = 'data_sets/2D/' + str(exp_name) + '/trainingset_'+str(size)
     elif data=='validation':
         if for_3d:
+            os.makedirs('data_sets/3D/' + str(exp_name)+ '_imgs', exist_ok=True)
             os.makedirs('data_sets/3D/' + str(exp_name), exist_ok=True)
-            file_path = 'data_sets/3D/' + str(exp_name) + '/validationset_'+str(size)
+            file_path = 'data_sets/3D/' + str(exp_name) + '_imgs/validationset_'+str(size)
+            file_path_vin = 'data_sets/3D/' + str(exp_name) + '/validationset_'+str(size)
         else:
+            os.makedirs('data_sets/2D/' + str(exp_name) + '_imgs', exist_ok=True)
             os.makedirs('data_sets/2D/' + str(exp_name), exist_ok=True)
-            file_path = 'data_sets/2D/' + str(exp_name) + '/validationset_'+str(size)
+            file_path = 'data_sets/2D/' + str(exp_name) + '_imgs/validationset_'+str(size)
+            file_path_vin = 'data_sets/2D/' + str(exp_name) + '/validationset_'+str(size)
     elif data=='evaluation':
         if for_3d:
+            os.makedirs('data_sets/3D/' + str(exp_name) + '_imgs', exist_ok=True)
             os.makedirs('data_sets/3D/' + str(exp_name), exist_ok=True)
-            file_path = 'data_sets/3D/' + str(exp_name) + '/evaluationset_'+str(size)
+            file_path = 'data_sets/3D/' + str(exp_name) + '_imgs/evaluationset_'+str(size)
+            file_path_vin = 'data_sets/3D/' + str(exp_name)  + '/evaluationset_'+str(size)
         else:
+            os.makedirs('data_sets/2D/' + str(exp_name) + '_imgs', exist_ok=True)
             os.makedirs('data_sets/2D/' + str(exp_name), exist_ok=True)
-            file_path = 'data_sets/2D/' + str(exp_name) + '/evaluationset_'+str(size)
+            file_path = 'data_sets/2D/' + str(exp_name) + '_imgs/evaluationset_'+str(size)
+            file_path_vin = 'data_sets/2D/' + str(exp_name) + '/evaluationset_'+str(size)
 
     for i, (map, path_list, action_list, y_start) in enumerate(maps):
         if make_images:
@@ -313,7 +325,7 @@ def generate_data(number_of_examples, size, min_number_of_obstacles,
         paths.append(path_list)
         actions.append(action_list)
 
-    torch.save({'inputs':inputs, 'paths':paths, 'actions':actions}, file_path +'.pt')
+    torch.save({'inputs':inputs, 'paths':paths, 'actions':actions}, file_path_vin +'.pt')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
