@@ -78,7 +78,7 @@ class GridDataset_2d(Dataset):
         map_index, pos_t1, pos_t2 = parameters
         rollout_img = self.grids[map_index]
 
-        if pos_t1[1]+self.size//2 > self.size * 2:
+        '''if pos_t1[1]+self.size//2 > self.size * 2:
             if pos_t1[0]+self.size//2 > self.size * 2:
                 occ_map = rollout_img[self.size *2 - self.size:,self.size *2 - self.size :self.size*2]
             elif pos_t1[0] - self.size//2 < 0:
@@ -97,9 +97,9 @@ class GridDataset_2d(Dataset):
             occ_map = rollout_img[self.size *2 - self.size:self.size *2 ,pos_t1[1] - self.size//2:pos_t1[1]+self.size//2]
         elif pos_t1[0] - self.size//2 < 0:
             occ_map = rollout_img[0:self.size,pos_t1[1] - self.size//2:pos_t1[1]+self.size//2]
-        else:
-            # get occupancy map by cropping patch from full environment map around start position
-            occ_map = rollout_img[pos_t1[0] - self.size//2:pos_t1[0]+self.size//2,pos_t1[1] - self.size//2:pos_t1[1]+self.size//2]
+        else:'''
+        # get occupancy map by cropping patch from full environment map around start position
+        occ_map = rollout_img[pos_t1[0] - self.size//2:pos_t1[0]+self.size//2,pos_t1[1] - self.size//2:pos_t1[1]+self.size//2]
 
         # get goal map (all cells contain '0' except for goal cell, which contains '1')
         goal_map = torch.FloatTensor(self.size, self.size).fill_(0)
