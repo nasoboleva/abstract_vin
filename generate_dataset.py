@@ -5,10 +5,9 @@ import random
 import time
 from multiprocessing import Pool
 import argparse
-import imageio
+import cv2
 import os
 import math
-import matplotlib.pyplot as plt
 
 from utils import path_to_action_vectors, extract_path
 from astar import astar_planner_2d, astar_planner_3d, dijkstra_planner_2d, dijkstra_planner_3d
@@ -310,16 +309,16 @@ def generate_data(number_of_examples, size, min_number_of_obstacles,
                 curr_map_img[start[0], start[1]] = 0
                 curr_map_img[goal[0], goal[1]] = 0
 
-                imageio.imwrite(file_path + '_' + str(i) + '_' + str(j) + 'full.png',
-                                curr_map_img.astype('uint8'))
-                imageio.imwrite(file_path + '_' + str(i) + '_' + str(j) + '.png',
-                                curr_map_img[y_start:y_start + size //2, size:size+size//2].astype('uint8'))
+                cv2.imwrite(file_path + '_' + str(i) + '_' + str(j) + 'full.png',
+                            curr_map_img.astype('uint8'))
+                cv2.imwrite(file_path + '_' + str(i) + '_' + str(j) + '.png',
+                            curr_map_img[y_start:y_start + size //2, size:size+size//2].astype('uint8'))
                 for path_cell in path[1:-1]:
                     curr_map_img[path_cell[0], path_cell[1]] = 0
-                imageio.imwrite(file_path + '_' + str(i) + '_' + str(j) + '_logfull.png',
-                                curr_map_img.astype('uint8'))
-                imageio.imwrite(file_path + '_' + str(i) + '_' + str(j) + '_log.png',
-                                curr_map_img[y_start:y_start + size // 2, size:size+size//2].astype('uint8'))
+                cv2.imwrite(file_path + '_' + str(i) + '_' + str(j) + '_logfull.png',
+                            curr_map_img.astype('uint8'))
+                cv2.imwrite(file_path + '_' + str(i) + '_' + str(j) + '_log.png',
+                            curr_map_img[y_start:y_start + size // 2, size:size+size//2].astype('uint8'))
 
         inputs.append(map)
         paths.append(path_list)
