@@ -34,6 +34,7 @@ class LabeledExample:
 
     def add_random_rectangular_obstacles(self, number, max_obs_height, max_obs_width, if_ours=False):
         if if_ours:
+            self.y_start = np.random.choice(np.arange(self.size // 4, self.size //2 ))
             while self.number_of_obstacles < number:
                 dencity = 0.2
                 indent = 3
@@ -42,13 +43,8 @@ class LabeledExample:
                 obst_width = 2 * proportion
                 obst_height = 3 * proportion
                 x = np.random.choice(np.arange(self.size // 2 + indent, self.size // 4 * 3 - indent - obst_height))
-                y = np.random.choice(np.arange(self.size // 8 * 3, self.size - self.size // 8 * 3 - obst_height ))
-                if x <= self.size // 2 <= x + obst_width or \
-                   x <= self.size // 2 <= x + obst_height or \
-                   y <= self.size // 2 <= y + obst_height or \
-                   y <= self.size // 2 <= y + obst_width:
-                   continue
-                if self.number_of_obstacles % 2 == 0:
+                y = np.random.choice(np.arange(self.y_start, self.y_start + self.size // 4 - obst_height))
+                if self.number_of_obstacles % 2 != 0:
                     for dx in range(obst_width):
                         for dy in range(obst_height):
                             self.map[y + dy][x + dx] = 1
@@ -136,7 +132,7 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
                 # sample random goal state
                 if if_ours:
                     indent = 3
-                    x = np.random.randint(size // 4 * 3, high= size * 2 - size // 4 * 3)
+                    x = np.random.randint(example.y_start, high= example.y_start + example.size // 4)
                     y = np.random.randint(size // 2 * 3 - indent, high=  size // 2 * 3)
                     if example.map[x, y] != 0:
                         failed = True
@@ -238,7 +234,7 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
                 action_list.append(action_sequence)
                 num_paths +=1
 
-    return example.map, path_list, action_list
+    return example.map, path_list, action_list, example.y_start
 
 def generate_data(number_of_examples, size, min_number_of_obstacles,
                   max_number_of_obstacles, max_obs_height=2, max_obs_width=2,
@@ -292,7 +288,7 @@ def generate_data(number_of_examples, size, min_number_of_obstacles,
             os.makedirs('data_sets/2D/' + str(exp_name), exist_ok=True)
             file_path = 'data_sets/2D/' + str(exp_name) + '/evaluationset_'+str(size)
 
-    for i, (map, path_list, action_list) in enumerate(maps):
+    for i, (map, path_list, action_list, y_start) in enumerate(maps):
         if make_images:
             map_img = map.numpy().copy()
             map_img[map_img == 0] = 2
@@ -305,13 +301,13 @@ def generate_data(number_of_examples, size, min_number_of_obstacles,
                 imageio.imwrite(file_path + '_' + str(i) + '_' + str(j) + 'full.png',
                                 curr_map_img.astype('uint8'))
                 imageio.imwrite(file_path + '_' + str(i) + '_' + str(j) + '.png',
-                                curr_map_img[size // 4 * 3:-(size // 4 * 3), size:size+size//2].astype('uint8'))
+                                curr_map_img[y_start:y_start + size //2, size:size+size//2].astype('uint8'))
                 for path_cell in path[1:-1]:
                     curr_map_img[path_cell[0], path_cell[1]] = 0
                 imageio.imwrite(file_path + '_' + str(i) + '_' + str(j) + '_logfull.png',
                                 curr_map_img.astype('uint8'))
                 imageio.imwrite(file_path + '_' + str(i) + '_' + str(j) + '_log.png',
-                                curr_map_img[size // 4 * 3:-(size // 4 * 3), size:size+size//2].astype('uint8'))
+                                curr_map_img[y_start:y_start + size // 2, size:size+size//2].astype('uint8'))
 
         inputs.append(map)
         paths.append(path_list)
