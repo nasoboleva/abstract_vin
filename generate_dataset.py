@@ -7,6 +7,7 @@ from multiprocessing import Pool
 import argparse
 import cv2
 import os
+import glob
 import math
 
 from utils import path_to_action_vectors, extract_path
@@ -31,8 +32,22 @@ class LabeledExample:
         self.leg_y = 2                      # distance between robot base and wheel (y-coordinate)
 
 
-    def add_random_rectangular_obstacles(self, number, max_obs_height, max_obs_width, if_ours=False):
-        if if_ours:
+    def add_random_rectangular_obstacles(self, number, max_obs_height, max_obs_width, if_ours=False, from_image=None):
+        if from_image:
+            image = cv2.imread(from_image).mean(-1)
+            im_size = image.shape[0]
+            if im_size == self.size:
+                self.x_crop = 0
+                self.y_crop = 0
+            else:
+                self.x_crop = np.random.choice(np.arange(0, im_size - self.size))
+                self.y_crop = np.random.choice(np.arange(0, im_size - self.size))
+            self.map = image[self.y_crop:self.y_crop+self.size, self.y_crop:self.y_crop+self.size]
+            print(self.map.shape, np.unique(self.map))
+
+            self.y_start = np.random.choice(np.arange(self.size // 4, self.size //2 ))
+
+        elif if_ours:
             self.y_start = np.random.choice(np.arange(self.size // 4, self.size //2 ))
             while self.number_of_obstacles < number:
                 dencity = 0.2
@@ -80,12 +95,13 @@ class LabeledExample:
 # Input:    -idx: index of generated map
 #           -use_dijkstra: use Dijkstra instead of A* to compute all paths in parallel
 # Output: Occupancy map and list of expert paths
-def generate_map_with_trajectories(idx, use_dijkstra=True):
+def generate_map_with_trajectories(idx, from_images=None, use_dijkstra=True):
     # reset random seed
     np.random.seed()
     # get global parameters
     size, min_number_of_obstacles, max_number_of_obstacles, max_obs_height, max_obs_width, num_paths_per_grid, for_3d, if_ours = parameter
-
+    if from_images:
+        path_images = glob.glob(from_images + '*.png')
     failed = True
     while failed:
         failed = False
@@ -99,7 +115,11 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
         obsts = np.random.choice(np.arange(1, max_number_of_obstacles + 1))
 
         #number_of_obstacles = np.random.randint(4*min_number_of_obstacles, high=4*max_number_of_obstacles)
-        example.add_random_rectangular_obstacles(obsts, max_obs_height, max_obs_width, if_ours)
+        if from_images:
+            example.add_random_rectangular_obstacles(obsts, max_obs_height, max_obs_width, if_ours, np.random.choice(path_images))
+        else:
+            example.add_random_rectangular_obstacles(obsts, max_obs_height, max_obs_width, if_ours)
+
         # set start position at the center of the map
         example.start = (size, size)
         # make sure that the start position does not contain any obstacles
@@ -238,7 +258,8 @@ def generate_map_with_trajectories(idx, use_dijkstra=True):
 def generate_data(number_of_examples, size, min_number_of_obstacles,
                   max_number_of_obstacles, max_obs_height=2, max_obs_width=2,
                   num_path_per_grid=7, for_3d=False, data='training',
-                  num_workers=4, make_images=True, exp_name='1', if_ours=False):
+                  num_workers=4, make_images=True, exp_name='1', if_ours=False,
+                  from_images=None):
     if data=='training':
         print('Generating Training Data')
     elif data=='validation':
@@ -260,7 +281,7 @@ def generate_data(number_of_examples, size, min_number_of_obstacles,
     maps = []
 
     for ex in range(number_of_examples):
-        maps += [generate_map_with_trajectories(ex)]
+        maps += [generate_map_with_trajectories(ex, from_images=from_images)]
     #pool = Pool(processes=num_workers)
     #maps = pool.map(generate_map_with_trajectories, range(number_of_examples))
     #pool.close()
@@ -301,7 +322,10 @@ def generate_data(number_of_examples, size, min_number_of_obstacles,
 
     for i, (map, path_list, action_list, y_start) in enumerate(maps):
         if make_images:
-            map_img = map.numpy().copy()
+            if from_images:
+                map_img = map.copy()
+            else:
+                map_img = map.numpy().copy()
             map_img[map_img == 0] = 2
             for j, path in enumerate(path_list):
                 curr_map_img = map_img.copy()
@@ -382,6 +406,10 @@ if __name__ == '__main__':
         '--if_ours',
         type=bool,
         help='Name of the data and results folder.')
+    parser.add_argument(
+        '--from_images',
+        type=str,
+        help='folder with map images')
     param = parser.parse_args()
 
     # set size/dim dependent default values
@@ -427,36 +455,36 @@ if __name__ == '__main__':
                       param.max_obs_width, param.paths_per_grid,
                       for_3d=for_3d, data='training',
                       num_workers=param.num_workers, make_images=param.make_images,
-                      exp_name=param.exp_name, if_ours=param.if_ours)
+                      exp_name=param.exp_name, if_ours=param.if_ours, from_images=param.from_images)
     elif param.type == 'validation':
         generate_data(param.num_grids, param.size, param.min_obs_num,
                       param.max_obs_num, param.max_obs_height,
                       param.max_obs_width, param.paths_per_grid,
                       for_3d=for_3d, data='validation',
                       num_workers=param.num_workers, make_images=param.make_images,
-                      exp_name=param.exp_name, if_ours=param.if_ours)
+                      exp_name=param.exp_name, if_ours=param.if_ours, from_images=param.from_images)
     elif param.type == 'evaluation':
         generate_data(param.num_grids, param.size, param.min_obs_num,
                       param.max_obs_num, param.max_obs_height,
                       param.max_obs_width, param.paths_per_grid,
                       for_3d=for_3d, data='evaluation',
                       num_workers=param.num_workers, make_images=param.make_images,
-                      exp_name=param.exp_name, if_ours=param.if_ours)
+                      exp_name=param.exp_name, if_ours=param.if_ours, from_images=param.from_images)
     elif param.type == 'all':
         generate_data(5000, param.size, param.min_obs_num, param.max_obs_num,
                       param.max_obs_height, param.max_obs_width,
                       param.paths_per_grid, for_3d=for_3d, data='training',
                       num_workers=param.num_workers, make_images=param.make_images,
-                      exp_name=param.exp_name, if_ours=param.if_ours)
+                      exp_name=param.exp_name, if_ours=param.if_ours, from_images=param.from_images)
         generate_data(715, param.size, param.min_obs_num, param.max_obs_num,
                       param.max_obs_height, param.max_obs_width,
                       param.paths_per_grid, for_3d=for_3d, data='validation',
                       num_workers=param.num_workers, make_images=param.make_images,
-                      exp_name=param.exp_name, if_ours=param.if_ours)
+                      exp_name=param.exp_name, if_ours=param.if_ours, from_images=param.from_images)
         generate_data(715, param.size, param.min_obs_num, param.max_obs_num,
                       param.max_obs_height, param.max_obs_width,
                       param.paths_per_grid, for_3d=for_3d, data='evaluation',
                       num_workers=param.num_workers, make_images=param.make_images,
-                      exp_name=param.exp_name, if_ours=param.if_ours)
+                      exp_name=param.exp_name, if_ours=param.if_ours, from_images=param.from_images)
     else:
         print('Invalid dataset type.')
